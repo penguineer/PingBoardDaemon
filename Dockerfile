@@ -11,6 +11,7 @@ RUN find . -type d -name .git -exec git describe --always --dirty > /git-version
 FROM python:3.9
 
 EXPOSE 8080
+HEALTHCHECK --interval=10s CMD curl --fail http://localhost:8080/v0/health || exit 1
 
 COPY src/OAS3.yml /
 
