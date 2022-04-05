@@ -31,6 +31,11 @@ tbd
 tbd
 ```
 
+### Configuration
+
+Configuration is done using environment variables:
+* `MANAGEMENT_PORT`: Port for the HTTP Management Service (default: 8080)
+
 ## API
 
 tbd
