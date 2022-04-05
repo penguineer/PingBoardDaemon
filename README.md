@@ -19,16 +19,12 @@ The main goal is to enable the PingBoard as an IoT input device and execute acti
 - [Contributing](#contributing)
 - [License](#license)
 
-## Install
-
-```
-tbd
-```
-
 ## Usage
 
-```
-tbd
+Run via docker:
+
+```bash
+docker run --rm -p 8080:8080 mrtux/pingboard-daemon
 ```
 
 ### Configuration
