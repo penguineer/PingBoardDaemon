@@ -45,7 +45,7 @@ PRs are welcome!
 
 If possible, please stick to the following guidelines:
 * Keep PRs reasonably small and their scope limited to a feature or module within the code.
-* If a large change is planned, it is best to open a feature request issue first, then link subsequent PRs to this issue, so that the PRs move the code towards the intendet feature.
+* If a large change is planned, it is best to open a feature request issue first, then link subsequent PRs to this issue, so that the PRs move the code towards the intended feature.
 
 Small note: If editing the README, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
 
