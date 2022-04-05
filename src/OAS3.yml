@@ -1,0 +1,87 @@
+openapi: 3.0.0
+info:
+  title: PingBoard Daemon Service Interface
+  version: 0.1.0
+  description:
+    Service Interface to check the status of a PingBoard Daemon
+  contact:
+    name: PingBoard Daemon on GitHub
+    url: https://github.com/penguineer/PingBoardDaemon
+
+
+servers:
+  - url: http://localhost:8080/v0
+tags:
+  - name: mgmt
+    description: Common management functions
+
+paths:
+  /health:
+    get:
+      summary: Provides health information about the service
+      tags:
+        - mgmt
+      operationId: health
+      responses:
+        '200':
+          description: endpoint is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/health'
+        '500':
+          description: endpoint is NOT healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/health'
+  /oas3:
+    get:
+      summary: get this endpoint's Open API 3 specification
+      tags:
+        - mgmt
+      responses:
+        '200':
+          description: returns the API spec
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    health:
+      type: object
+      properties:
+        git-version:
+          type: string
+        api-version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: string
+          example: ISO8601 conforming timespan
+  responses:
+    AuthenticationRequired:
+      description: Authentication is required (401)
+    NotAllowed:
+      description: The call is not allowed with the provided authentication (403)
+    InvalidInput:
+      description: One or more parameters are missing or invalid (400)
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: error message
+    InternalError:
+      description: Internal error during execution (500)
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: error message
+
