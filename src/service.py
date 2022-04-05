@@ -101,11 +101,17 @@ class GitHealthProvider(HealthProvider):
 
         # if not available, try git
         if v is None:
+            LOGGER.info("%s not found, trying git call", str(gitversion_file))
             try:
                 v = subprocess.check_output(["git", "describe", "--always", "--dirty"],
                                             cwd=os.path.dirname(__file__)).strip().decode()
             except subprocess.CalledProcessError as e:
-                LOGGER.warning("Checking git version lead to non-null return code ", e.returncode)
+                LOGGER.warning("Checking git version lead to non-null return code: %s", e.returncode)
+
+        if v:
+            LOGGER.info("Git version is %s", str(v))
+        else:
+            LOGGER.info("Git version could not be determined.")
 
         return v
 
