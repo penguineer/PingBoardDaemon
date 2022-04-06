@@ -30,6 +30,16 @@ docker run --rm -p 8080:8080 mrtux/pingboard-daemon
 
 Configuration is done using environment variables:
 * `MANAGEMENT_PORT`: Port for the HTTP Management Service (default: 8080)
+* `AMQP_HOST`: RabbitMQ host
+* `AMQP_USER`: RabbitMQ user
+* `AMQP_PASS`: RabbitMQ password (default: empty)
+* `AMQP_EXCHANGE`: RabbitMQ Exchange name (default: `pingboard`)
+* `AMQP_RK_STATUS`: RabbitMQ routing key for status information (default: `status`)
+* `AMQP_RK_KEY_1`: RabbitMQ routing key for key 1 press (default: `1.key`)
+* `AMQP_RK_KEY_2`: RabbitMQ routing key for key 2 press (default: `2.key`)
+* `AMQP_RK_KEY_3`: RabbitMQ routing key for key 3 press (default: `3.key`)
+* `AMQP_RK_KEY_4`: RabbitMQ routing key for key 4 press (default: `4.key`)
+* `AMQP_QU_CONFIG`: RabbitMQ queue for configuration updates (default: `pingboard-configuration`)
 
 ## API
 
