@@ -154,6 +154,7 @@ class RabbitMQConnector(object):
 
     def _on_channel_open(self, channel):
         self._channel = channel
+        channel.add_on_close_callback(self._on_connection_closed)
         channel.basic_qos(prefetch_count=1)
         channel.basic_consume(queue=self._amqp_cfg.qu_config(),
                               on_message_callback=self._on_configuration_callback)
