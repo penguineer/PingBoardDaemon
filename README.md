@@ -12,7 +12,6 @@ The main goal is to enable the PingBoard as an IoT input device and execute acti
 
 ## Table of Contents
 
-- [Install](#install)
 - [Usage](#usage)
 - [API](#api)
 - [Maintainers](#maintainers)
