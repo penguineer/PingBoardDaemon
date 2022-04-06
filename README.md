@@ -43,7 +43,49 @@ Configuration is done using environment variables:
 
 ## API
 
-tbd
+### RabbitMQ routing
+
+The daemon expects a specific setup for RabbitMQ:
+* All messages are sent to one single exchange.
+* There are specific routing keys for status updates and key 1 to 4 presses.  
+* Configuration is received on a separate queue.
+Exchange and routing keys can be configured with the environment variables.
+
+In the current version the exchange, queues and bindings are not set up automatically, so RabbitMQ has to be prepared
+accordingly.
+
+To route multiple or all keys to the same queue, either create the respective bindings or set all routing keys to the
+same value.
+
+### Messages
+
+All messages are encoded in the JSON format.
+
+#### Key presses
+
+The message for a key press is structured as follows:
+
+```json
+{
+  "key": 1
+}
+```
+
+The value can be a number between 1 and 4, depending on the key pressed.
+
+#### Error message
+
+An error is structured like this:
+
+```json
+{
+  "error": {
+    "message": "Short error message",
+    "details": "Detailed explanation of the error",
+    "original": "Original message that lead to the error, if applicable"
+  }
+}
+```
 
 ## Maintainers
 
