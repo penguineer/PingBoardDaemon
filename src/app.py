@@ -6,6 +6,7 @@ import os
 import tornado.ioloop
 
 import service
+import rabbitmq
 
 import logging
 
@@ -19,6 +20,7 @@ def main():
 
     # Service Configuration
     management_port = os.getenv('MGMT_PORT', 8080)
+    amqp_cfg = rabbitmq.AmqpConfiguration.from_environment()
 
     # Setup ioloop
     service.platform_setup()
@@ -33,6 +35,11 @@ def main():
     # Health Provider map uses weak references, so make sure to store this instance in a variable
     git_health_provider = service.GitHealthProvider()
     service.HealthHandler.add_health_provider('git-version', git_health_provider)
+
+    # RabbitMQ
+    amqp = rabbitmq.RabbitMQConnector(amqp_cfg, ioloop)
+    amqp.setup()
+    guard.add_termination_handler(amqp.stop)
 
     # Run
     LOGGER.info("Starting ioloop")
