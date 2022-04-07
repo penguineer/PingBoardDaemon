@@ -64,6 +64,9 @@ def main():
             LOGGER.info("Keyboard interrupt")
             guard.terminate()
 
+    # Restart ioloop for clean-up
+    ioloop.start()
+
     # Teardown
     LOGGER.info("Service terminated")
 
