@@ -166,6 +166,7 @@ class RabbitMQConnector(object):
 
         # Something went wrong.
         # Close the connection and let the connector rebuild
+        self._channel = None
         if self._connection:
             self._connection.close()
 
