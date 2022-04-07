@@ -108,7 +108,7 @@ class RabbitMQConnector(object):
         self._configuration_callback = None
 
     def setup(self):
-        self._connection = self._connect()
+        self._reconnect()
 
     def stop(self):
         LOGGER.info("Terminating RabbitMQ consumer")
@@ -129,16 +129,23 @@ class RabbitMQConnector(object):
     def _connect(self):
         LOGGER.info("Connecting to %s@%s", self._amqp_cfg.user(), self._amqp_cfg.host())
 
-        return TornadoConnection(parameters=self._amqp_cfg.connection_parameters(),
-                                 custom_ioloop=self._ioloop,
-                                 on_open_callback=self._on_connection_open,
-                                 on_open_error_callback=None,
-                                 on_close_callback=None)
+        self._connection = TornadoConnection(parameters=self._amqp_cfg.connection_parameters(),
+                                             custom_ioloop=self._ioloop,
+                                             on_open_callback=self._on_connection_open,
+                                             on_open_error_callback=self._on_connection_error,
+                                             on_close_callback=None)
 
     def _reconnect(self):
         if not self._terminating:
+            try:
+                self._connect()
+            except Exception as e:
+                LOGGER.error("Error when connecting to RabbitMQ (will try again in 5 seconds: %s", str(e))
+                self._ioloop.call_later(5, self._reconnect)
 
-            self._connection = self._connect()
+    def _on_connection_error(self, _connection, e):
+        LOGGER.error("Connection error (trying again in 5 seconds): %s", str(e))
+        self._ioloop.call_later(5, self._reconnect)
 
     def _on_connection_open(self, _connection):
         LOGGER.info("Connection to %s opened", self._amqp_cfg.host())
