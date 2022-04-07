@@ -2,6 +2,7 @@
 
 import os
 import json
+import weakref
 
 import pika
 from pika.adapters.tornado_connection import TornadoConnection
@@ -114,6 +115,7 @@ class RabbitMQConnector(object):
         self._channel = None
 
         self._configuration_callback = None
+        self._configuration_provider = None
 
     def setup(self):
         self._reconnect()
@@ -122,8 +124,18 @@ class RabbitMQConnector(object):
         LOGGER.info("Terminating RabbitMQ consumer")
         self._terminating = True
 
+        if self._amqp_cfg.rk_config() != "" and\
+                self._configuration_provider and \
+                self._configuration_provider() is not None:
+            LOGGER.info("Trying to send current configuration.")
+            cfg = self._configuration_provider()()
+            self._ioloop.add_callback(self._publish, self._amqp_cfg.rk_config(), cfg)
+
     def set_configuration_callback(self, callback: Callable[[json], bool]):
         self._configuration_callback = callback
+
+    def set_configuration_provider(self, provider):
+        self._configuration_provider = weakref.WeakMethod(provider)
 
     def publish_status(self, status: json):
         self._publish(self._amqp_cfg.rk_status(), status)
