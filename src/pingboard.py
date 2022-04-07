@@ -221,8 +221,6 @@ class PingboardConfiguration(object):
             except Exception as e:
                 LOGGER.error("Invalid configuration snippet: %s", str(e))
 
-        return True
-
     def _cfg_brightness(self, brightness):
         if brightness is not None:
             self._brightness(brightness)

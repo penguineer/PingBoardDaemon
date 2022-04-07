@@ -100,7 +100,7 @@ class RabbitMQConnector(object):
         self._amqp_cfg = amqp_cfg
 
         self._ioloop = ioloop
-        self._terminating = None
+        self._terminating = False
 
         self._connection = None
         self._channel = None
@@ -108,7 +108,7 @@ class RabbitMQConnector(object):
         self._configuration_callback = None
 
     def setup(self):
-        self._connection = self._connect()
+        self._reconnect()
 
     def stop(self):
         LOGGER.info("Terminating RabbitMQ consumer")
@@ -129,16 +129,23 @@ class RabbitMQConnector(object):
     def _connect(self):
         LOGGER.info("Connecting to %s@%s", self._amqp_cfg.user(), self._amqp_cfg.host())
 
-        return TornadoConnection(parameters=self._amqp_cfg.connection_parameters(),
-                                 custom_ioloop=self._ioloop,
-                                 on_open_callback=self._on_connection_open,
-                                 on_open_error_callback=None,
-                                 on_close_callback=None)
+        self._connection = TornadoConnection(parameters=self._amqp_cfg.connection_parameters(),
+                                             custom_ioloop=self._ioloop,
+                                             on_open_callback=self._on_connection_open,
+                                             on_open_error_callback=self._on_connection_error,
+                                             on_close_callback=None)
 
     def _reconnect(self):
         if not self._terminating:
+            try:
+                self._connect()
+            except Exception as e:
+                LOGGER.error("Error when connecting to RabbitMQ (will try again in 5 seconds: %s", str(e))
+                self._ioloop.call_later(5, self._reconnect)
 
-            self._connection = self._connect()
+    def _on_connection_error(self, _connection, e):
+        LOGGER.error("Connection error (trying again in 5 seconds): %s", str(e))
+        self._ioloop.call_later(5, self._reconnect)
 
     def _on_connection_open(self, _connection):
         LOGGER.info("Connection to %s opened", self._amqp_cfg.host())
@@ -166,17 +173,16 @@ class RabbitMQConnector(object):
 
         # Something went wrong.
         # Close the connection and let the connector rebuild
+        self._channel = None
         if self._connection:
             self._connection.close()
 
     def _on_configuration_callback(self, channel, method, _properties, body):
-        ack = True
-
         if self._configuration_callback:
             try:
                 cfg = json.loads(body.decode('utf-8'))
                 if self._configuration_callback:
-                    ack = self._configuration_callback(cfg)
+                    self._configuration_callback(cfg)
             except json.decoder.JSONDecodeError as e:
                 LOGGER.warning("Could not decode configuration snippet: %s", str(e))
                 self._publish(self._amqp_cfg.rk_status(),
@@ -186,7 +192,8 @@ class RabbitMQConnector(object):
                                   "original": body.decode('utf-8')
                               }})
 
-        if ack:
+        # Don't ack when terminating, as we cannot act on the configuration anymore
+        if not self._terminating:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def _publish(self, rk, body):
