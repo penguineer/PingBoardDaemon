@@ -170,13 +170,11 @@ class RabbitMQConnector(object):
             self._connection.close()
 
     def _on_configuration_callback(self, channel, method, _properties, body):
-        ack = True
-
         if self._configuration_callback:
             try:
                 cfg = json.loads(body.decode('utf-8'))
                 if self._configuration_callback:
-                    ack = self._configuration_callback(cfg)
+                    self._configuration_callback(cfg)
             except json.decoder.JSONDecodeError as e:
                 LOGGER.warning("Could not decode configuration snippet: %s", str(e))
                 self._publish(self._amqp_cfg.rk_status(),
@@ -186,7 +184,8 @@ class RabbitMQConnector(object):
                                   "original": body.decode('utf-8')
                               }})
 
-        if ack:
+        # Don't ack when terminating, as we cannot act on the configuration anymore
+        if not self._terminating:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def _publish(self, rk, body):
