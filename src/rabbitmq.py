@@ -100,7 +100,7 @@ class RabbitMQConnector(object):
         self._amqp_cfg = amqp_cfg
 
         self._ioloop = ioloop
-        self._terminating = None
+        self._terminating = False
 
         self._connection = None
         self._channel = None
