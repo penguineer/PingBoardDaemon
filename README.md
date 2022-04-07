@@ -170,6 +170,9 @@ If the Pingboard is available, all settings will be written in their order of ap
 
 Please note that the key index is one-based.
 
+On shutdown the daemon will push an the configuration to the queue to retain it during a downtime. 
+To avoid this behaviour set an empty routing key for the configuration.
+
 #### Error message
 
 An error is structured like this:
