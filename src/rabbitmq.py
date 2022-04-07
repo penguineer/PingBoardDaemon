@@ -121,7 +121,7 @@ class RabbitMQConnector(object):
         self._publish(self._amqp_cfg.rk_status(), status)
 
     def publish_keypress(self, idx: int):
-        self._publish(self._amqp_cfg.rk_key(idx),
+        self._publish(self._amqp_cfg.rk_key(idx-1),
                       {
                           "key": int(idx)
                       })
