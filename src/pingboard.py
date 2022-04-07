@@ -220,7 +220,10 @@ class PingboardConfiguration(object):
     """Handle Pingboard configuration requests"""
     def __init__(self, pb_serial: PingboardSerial):
         self._serial = pb_serial
-        self._state = PingboardState()
+
+        # State object will be created when the first configuration comes in.
+        # This way we won't push dummy configuration to the board.
+        self._state = None
 
         self._cfg_handlers = {
             "brightness": self._cfg_brightness,
@@ -229,6 +232,9 @@ class PingboardConfiguration(object):
         }
 
     def push_config(self):
+        if self._state is None:
+            return None
+
         self._brightness(self._state.brightness)
         for idx in range(1, 5):
             key = self._state.keys[idx - 1]
@@ -236,6 +242,9 @@ class PingboardConfiguration(object):
             self._key_blink(idx, key.blink_mode, key.blink_color)
 
     def on_configuration(self, cfg: json):
+        if self._state is None:
+            self._state = PingboardState()
+
         configuration = cfg.get("configuration", dict())
         for key, value in configuration.items():
             try:
