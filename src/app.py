@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 """Main application"""
-
 import os
 import tornado.ioloop
 
@@ -37,16 +36,18 @@ def main():
     git_health_provider = service.GitHealthProvider()
     service.HealthHandler.add_health_provider('git-version', git_health_provider)
 
-    # RabbitMQ
-    amqp = rabbitmq.RabbitMQConnector(amqp_cfg, ioloop)
-    amqp.setup()
-    guard.add_termination_handler(amqp.stop)
-
-    # Pingboard
+    # Pingboard Configuration
     pb_serial = pingboard.PingboardSerial()
     pb_cfg = pingboard.PingboardConfiguration(pb_serial)
-    amqp.set_configuration_callback(pb_cfg.on_configuration)
 
+    # RabbitMQ
+    amqp = rabbitmq.RabbitMQConnector(amqp_cfg, ioloop)
+    guard.add_termination_handler(amqp.stop)
+    amqp.set_configuration_callback(pb_cfg.on_configuration)
+    amqp.set_configuration_provider(pb_cfg.get_configuration)
+    amqp.setup()
+
+    # Pingboard Input
     key_parser = pingboard.PingboardKeyParser(amqp.publish_keypress)
     pb_input = pingboard.PingboardEvDev(key_parser, ioloop)
     pb_input.add_on_acquire_callback(pb_serial.scan_port)
