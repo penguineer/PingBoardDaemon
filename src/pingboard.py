@@ -114,6 +114,19 @@ class PingboardKeyState(object):
         self.blink_mode = 'OFF'
         self.blink_color = [0] * 3
 
+    def as_key_configuration(self, idx: int) -> dict:
+        return {
+            "idx": idx,
+            "color": self.color
+        }
+
+    def as_blink_configuration(self, idx: int) -> dict:
+        return {
+            "idx": idx,
+            "mode": self.blink_mode,
+            "color": self.blink_color
+        }
+
 
 class PingboardState(object):
     """Store the Pingboard configuration state"""
@@ -124,6 +137,15 @@ class PingboardState(object):
                      PingboardKeyState(),
                      PingboardKeyState()]
         self.brightness = 255
+
+    def as_configuration(self) -> dict:
+        return {
+            "configuration": {
+                "brightness": self.brightness,
+                "keys": [key.as_key_configuration(idx + 1) for idx, key in enumerate(self.keys)],
+                "blink": [key.as_blink_configuration(idx + 1) for idx, key in enumerate(self.keys)]
+            },
+        }
 
 
 class PingboardSerial:
@@ -220,6 +242,9 @@ class PingboardConfiguration(object):
                 self._cfg_handlers[key](value)
             except Exception as e:
                 LOGGER.error("Invalid configuration snippet: %s", str(e))
+
+    def get_configuration(self) -> dict:
+        return self._state.as_configuration()
 
     def _cfg_brightness(self, brightness):
         if brightness is not None:
