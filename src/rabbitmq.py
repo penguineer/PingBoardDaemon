@@ -139,7 +139,8 @@ class RabbitMQConnector(object):
                 self._configuration_provider() is not None:
             LOGGER.info("Trying to send current configuration.")
             cfg = self._configuration_provider()()
-            self._ioloop.add_callback(self._publish, self._amqp_cfg.rk_config(), cfg)
+            if cfg is not None:
+                self._ioloop.add_callback(self._publish, self._amqp_cfg.rk_config(), cfg)
 
         if self._channel and self._consumer_tag:
             # Queue this in the ioloop to make sure that the configuration gets sent first!
@@ -249,7 +250,7 @@ class RabbitMQConnector(object):
         if self._configuration_callback:
             try:
                 cfg = json.loads(body.decode('utf-8'))
-                if self._configuration_callback:
+                if cfg and self._configuration_callback:
                     self._configuration_callback(cfg)
             except json.decoder.JSONDecodeError as e:
                 LOGGER.warning("Could not decode configuration snippet: %s", str(e))
