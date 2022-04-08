@@ -2,6 +2,7 @@
 
 import os
 import json
+import weakref
 
 import pika
 from pika.adapters.tornado_connection import TornadoConnection
@@ -20,6 +21,7 @@ class AmqpConfiguration(object):
     DEFAULT_EXCHANGE = "pingboard"
     DEFAULT_RK_STATUS = "status"
     DEFAULT_RK_KEY = ['1.key', '2.key', '3.key', '4.key']
+    DEFAULT_RK_CONFIGURATION = "pingboard-configuration"
     DEFAULT_QU_CONFIGURATION = "pingboard-configuration"
 
     @staticmethod
@@ -33,10 +35,12 @@ class AmqpConfiguration(object):
         rk_key = [""] * 4
         for i in range(0, 4):
             rk_key[i] = os.getenv('AMQP_RK_KEY_{}'.format(1), AmqpConfiguration.DEFAULT_RK_KEY[i])
+        rk_config = os.getenv('AMQP_RK_CONFIG', AmqpConfiguration.DEFAULT_RK_CONFIGURATION)
         qu_config = os.getenv('AMQP_QU_CONFIG', AmqpConfiguration.DEFAULT_QU_CONFIGURATION)
 
         return AmqpConfiguration(host, user, passwd,
-                                 exchange, rk_status, rk_key, qu_config)
+                                 exchange, rk_status, rk_key,
+                                 rk_config, qu_config)
 
     def __init__(self,
                  amqp_host: str,
@@ -45,6 +49,7 @@ class AmqpConfiguration(object):
                  exchange: Optional[str] = DEFAULT_EXCHANGE,
                  rk_status: Optional[str] = DEFAULT_RK_STATUS,
                  rk_key: Optional[List[str]] = None,
+                 rk_config: Optional[str] = DEFAULT_RK_CONFIGURATION,
                  qu_config: Optional[str] = DEFAULT_QU_CONFIGURATION):
 
         if not amqp_host:
@@ -66,6 +71,7 @@ class AmqpConfiguration(object):
         self._exchange = exchange
         self._rk_status = rk_status
         self._rk_key = rk_key or AmqpConfiguration.DEFAULT_RK_KEY
+        self._rk_config = rk_config
         self._qu_config = qu_config
 
     def host(self) -> str:
@@ -85,6 +91,9 @@ class AmqpConfiguration(object):
 
     def rk_key(self, idx: int) -> str:
         return self._rk_key[idx]
+
+    def rk_config(self) -> str:
+        return self._rk_config
 
     def qu_config(self) -> str:
         return self._qu_config
@@ -106,6 +115,7 @@ class RabbitMQConnector(object):
         self._channel = None
 
         self._configuration_callback = None
+        self._configuration_provider = None
 
     def setup(self):
         self._reconnect()
@@ -114,8 +124,18 @@ class RabbitMQConnector(object):
         LOGGER.info("Terminating RabbitMQ consumer")
         self._terminating = True
 
+        if self._amqp_cfg.rk_config() != "" and\
+                self._configuration_provider and \
+                self._configuration_provider() is not None:
+            LOGGER.info("Trying to send current configuration.")
+            cfg = self._configuration_provider()()
+            self._ioloop.add_callback(self._publish, self._amqp_cfg.rk_config(), cfg)
+
     def set_configuration_callback(self, callback: Callable[[json], bool]):
         self._configuration_callback = callback
+
+    def set_configuration_provider(self, provider):
+        self._configuration_provider = weakref.WeakMethod(provider)
 
     def publish_status(self, status: json):
         self._publish(self._amqp_cfg.rk_status(), status)

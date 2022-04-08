@@ -114,6 +114,19 @@ class PingboardKeyState(object):
         self.blink_mode = 'OFF'
         self.blink_color = [0] * 3
 
+    def as_key_configuration(self, idx: int) -> dict:
+        return {
+            "idx": idx,
+            "color": self.color
+        }
+
+    def as_blink_configuration(self, idx: int) -> dict:
+        return {
+            "idx": idx,
+            "mode": self.blink_mode,
+            "color": self.blink_color
+        }
+
 
 class PingboardState(object):
     """Store the Pingboard configuration state"""
@@ -124,6 +137,15 @@ class PingboardState(object):
                      PingboardKeyState(),
                      PingboardKeyState()]
         self.brightness = 255
+
+    def as_configuration(self) -> dict:
+        return {
+            "configuration": {
+                "brightness": self.brightness,
+                "keys": [key.as_key_configuration(idx + 1) for idx, key in enumerate(self.keys)],
+                "blink": [key.as_blink_configuration(idx + 1) for idx, key in enumerate(self.keys)]
+            },
+        }
 
 
 class PingboardSerial:
@@ -198,7 +220,10 @@ class PingboardConfiguration(object):
     """Handle Pingboard configuration requests"""
     def __init__(self, pb_serial: PingboardSerial):
         self._serial = pb_serial
-        self._state = PingboardState()
+
+        # State object will be created when the first configuration comes in.
+        # This way we won't push dummy configuration to the board.
+        self._state = None
 
         self._cfg_handlers = {
             "brightness": self._cfg_brightness,
@@ -207,6 +232,9 @@ class PingboardConfiguration(object):
         }
 
     def push_config(self):
+        if self._state is None:
+            return None
+
         self._brightness(self._state.brightness)
         for idx in range(1, 5):
             key = self._state.keys[idx - 1]
@@ -214,12 +242,18 @@ class PingboardConfiguration(object):
             self._key_blink(idx, key.blink_mode, key.blink_color)
 
     def on_configuration(self, cfg: json):
+        if self._state is None:
+            self._state = PingboardState()
+
         configuration = cfg.get("configuration", dict())
         for key, value in configuration.items():
             try:
                 self._cfg_handlers[key](value)
             except Exception as e:
                 LOGGER.error("Invalid configuration snippet: %s", str(e))
+
+    def get_configuration(self) -> dict:
+        return self._state.as_configuration()
 
     def _cfg_brightness(self, brightness):
         if brightness is not None:

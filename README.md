@@ -40,6 +40,7 @@ Configuration is done using environment variables:
 * `AMQP_RK_KEY_2`: RabbitMQ routing key for key 2 press (default: `2.key`)
 * `AMQP_RK_KEY_3`: RabbitMQ routing key for key 3 press (default: `3.key`)
 * `AMQP_RK_KEY_4`: RabbitMQ routing key for key 4 press (default: `4.key`)
+* `AMQP_RK_CONFIG`: RabbitMQ routing key to retain configuration (default: `pingboard-configuration`)
 * `AMQP_QU_CONFIG`: RabbitMQ queue for configuration updates (default: `pingboard-configuration`)
 
 ## API
@@ -49,7 +50,7 @@ Configuration is done using environment variables:
 The daemon expects a specific setup for RabbitMQ:
 
 * All messages are sent to one single exchange.
-* There are specific routing keys for status updates and key 1 to 4 presses.
+* There are specific routing keys for status updates, key 1 to 4 presses and to retain the configuration during downtime.
 * Configuration is received on a separate queue. Exchange and routing keys can be configured with the environment
   variables.
 
@@ -168,6 +169,9 @@ Fragmentation is accepted, following these rules:
 If the Pingboard is available, all settings will be written in their order of appearance.
 
 Please note that the key index is one-based.
+
+On shutdown the daemon will push an the configuration to the queue to retain it during a downtime. 
+To avoid this behaviour set an empty routing key for the configuration.
 
 #### Error message
 
