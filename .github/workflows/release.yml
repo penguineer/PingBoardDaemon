@@ -17,7 +17,7 @@ jobs:
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          onlyLastTag: "false" # set to true later (buggy with only one tag)
+          onlyLastTag: "true" # set to false if no tags exist (buggy with only one tag)
           stripHeaders: "true"
           stripGeneratorNotice: "true"
       - name: Extract the VERSION name
