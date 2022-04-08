@@ -253,7 +253,7 @@ class PingboardConfiguration(object):
                 LOGGER.error("Invalid configuration snippet: %s", str(e))
 
     def get_configuration(self) -> dict:
-        return self._state.as_configuration()
+        return (self._state or PingboardState()).as_configuration()
 
     def _cfg_brightness(self, brightness):
         if brightness is not None:
