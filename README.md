@@ -50,7 +50,7 @@ Configuration is done using environment variables:
 The daemon expects a specific setup for RabbitMQ:
 
 * All messages are sent to one single exchange.
-* There are specific routing keys for status updates and key 1 to 4 presses.
+* There are specific routing keys for status updates, key 1 to 4 presses and to retain the configuration during downtime.
 * Configuration is received on a separate queue. Exchange and routing keys can be configured with the environment
   variables.
 
