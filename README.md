@@ -10,6 +10,14 @@ A daemon that connects to a [PingBoard](https://github.com/PingTechGmbH/PingBoar
 sends key presses and accepts configuration via [RabbitMQ](https://www.rabbitmq.com/). The main goal is to enable the
 PingBoard as an IoT input device and execute actions outside the USB host.
 
+Features:
+* Emits AMQP messages on Pingboard key press.
+* Configures Pingboard (Brightness, Key LED colors, Blinking) with AMQP messages.
+* Detects PingBoard via evdev and grabs it to prevent rogue inputs to other applications.
+* Reconnects when connections to RabbitMQ or Pingboard are lost. Can also be started without Pingboard present.
+* Current state is pushed to the configuration queue when finishing, so that it can be retrieved on the next run. 
+* Runs out of an unprivileged Docker container.
+
 ## Table of Contents
 
 - [Usage](#usage)
@@ -19,6 +27,8 @@ PingBoard as an IoT input device and execute actions outside the USB host.
 - [License](#license)
 
 ## Usage
+
+### Run with Docker
 
 Deployment via Docker is not trivial, as the daemon needs access to USB (evdev and serial).
 
