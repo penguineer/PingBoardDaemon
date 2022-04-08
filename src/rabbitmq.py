@@ -5,6 +5,7 @@ import json
 import weakref
 
 import pika
+import pika.exchange_type
 from pika.adapters.tornado_connection import TornadoConnection
 import tornado.ioloop
 
@@ -191,10 +192,15 @@ class RabbitMQConnector(object):
         self._channel = channel
         channel.add_on_close_callback(self._on_connection_closed)
         channel.basic_qos(prefetch_count=1)
-        channel.basic_consume(queue=self._amqp_cfg.qu_config(),
-                              on_message_callback=self._on_configuration_callback)
 
         LOGGER.info("Configuration channel open")
+
+        # Verify that the exchange exists
+        self._channel.exchange_declare(exchange=self._amqp_cfg.exchange(),
+                                       exchange_type=pika.exchange_type.ExchangeType.topic,
+                                       durable=True,
+                                       passive=not self._amqp_cfg.declare(),
+                                       callback=self._on_exchange_declare)
 
     def _on_channel_closed(self, channel, reason):
         LOGGER.warning("Channel %i has been closed unexpectedly: %s", channel, reason)
@@ -204,6 +210,31 @@ class RabbitMQConnector(object):
         self._channel = None
         if self._connection:
             self._connection.close()
+
+    def _on_exchange_declare(self, _method_frame):
+        # Verify that the queue exists
+        self._channel.queue_declare(queue=self._amqp_cfg.qu_config(),
+                                    durable=True,
+                                    passive=not self._amqp_cfg.declare(),
+                                    callback=self._on_queue_declare)
+
+    def _on_queue_declare(self, _method_frame):
+        if self._amqp_cfg.declare():
+            # Declare binding
+            self._channel.queue_bind(
+                queue=self._amqp_cfg.qu_config(),
+                exchange=self._amqp_cfg.exchange(),
+                routing_key=self._amqp_cfg.rk_config(),
+                callback=self._on_bind
+            )
+        else:
+            # ... otherwise directly go to the next function
+            self._on_bind(_method_frame)
+
+    def _on_bind(self, _method_frame):
+        LOGGER.info("Starting to consume on queue %s", self._amqp_cfg.qu_config())
+        self._channel.basic_consume(queue=self._amqp_cfg.qu_config(),
+                                    on_message_callback=self._on_configuration_callback)
 
     def _on_configuration_callback(self, channel, method, _properties, body):
         if self._configuration_callback:
