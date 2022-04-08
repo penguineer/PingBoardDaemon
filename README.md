@@ -20,10 +20,19 @@ PingBoard as an IoT input device and execute actions outside the USB host.
 
 ## Usage
 
-Run via docker:
+Deployment via Docker is not trivial, as the daemon needs access to USB (evdev and serial).
+
+With the configuration stored in a file `.env`, the daemon can be started as follows: 
 
 ```bash
-docker run --rm -p 8080:8080 mrtux/pingboard-daemon
+docker run --rm \
+  -p 8080:8080 \
+  --env-file .env \
+  -v /dev:/dev \
+  -v /run/udev:/run/udev:ro \
+  --device-cgroup-rule='c 13:* rmw' \
+  --device-cgroup-rule='c 166:* rmw' \
+  mrtux/pingboard-daemon
 ```
 
 ### Configuration
