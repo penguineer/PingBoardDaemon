@@ -51,6 +51,7 @@ Configuration is done using environment variables:
 * `AMQP_RK_KEY_4`: RabbitMQ routing key for key 4 press (default: `4.key`)
 * `AMQP_RK_CONFIG`: RabbitMQ routing key to retain configuration (default: `pingboard-configuration`)
 * `AMQP_QU_CONFIG`: RabbitMQ queue for configuration updates (default: `pingboard-configuration`)
+* `AMQP_DECLARE`: Declare exchange and channel with bind for configuration (default: `false`) 
 
 ## API
 
@@ -63,8 +64,11 @@ The daemon expects a specific setup for RabbitMQ:
 * Configuration is received on a separate queue. Exchange and routing keys can be configured with the environment
   variables.
 
-In the current version the exchange, queues and bindings are not set up automatically, so RabbitMQ has to be prepared
-accordingly.
+Unless `AMQP_DECLARE` is set to `true` the exchange, queues and bindings are not set up automatically, so RabbitMQ has 
+to be prepared accordingly. This allows to fine-tune the channel settings in the broker.
+A declaration will only set up the exchange, a configuration channel and that channel's binding.
+Routing for key and status messages is not relevant to this daemon and must be set up by the receiving agents or in the 
+broker.
 
 To route multiple or all keys to the same queue, either create the respective bindings or set all routing keys to the
 same value.
