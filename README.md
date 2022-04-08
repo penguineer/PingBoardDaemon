@@ -20,6 +20,8 @@ PingBoard as an IoT input device and execute actions outside the USB host.
 
 ## Usage
 
+### Run with Docker
+
 Deployment via Docker is not trivial, as the daemon needs access to USB (evdev and serial).
 
 With the configuration stored in a file `.env`, the daemon can be started as follows: 
