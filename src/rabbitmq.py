@@ -217,7 +217,7 @@ class RabbitMQConnector(object):
         # Something went wrong.
         # Close the connection and let the connector rebuild
         self._channel = None
-        if self._connection:
+        if self._connection and not self._connection.is_closed:
             self._connection.close()
 
     def _on_exchange_declare(self, _method_frame):
