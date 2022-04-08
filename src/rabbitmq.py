@@ -122,6 +122,7 @@ class RabbitMQConnector(object):
 
         self._connection = None
         self._channel = None
+        self._consumer_tag = None
 
         self._configuration_callback = None
         self._configuration_provider = None
@@ -139,6 +140,14 @@ class RabbitMQConnector(object):
             LOGGER.info("Trying to send current configuration.")
             cfg = self._configuration_provider()()
             self._ioloop.add_callback(self._publish, self._amqp_cfg.rk_config(), cfg)
+
+        if self._channel and self._consumer_tag:
+            # Queue this in the ioloop to make sure that the configuration gets sent first!
+            self._ioloop.add_callback(self._channel.basic_cancel, self._consumer_tag, self._on_cancel)
+
+    def _on_cancel(self, _method_frame):
+        if self._channel:
+            self._channel.close()
 
     def set_configuration_callback(self, callback: Callable[[json], bool]):
         self._configuration_callback = callback
@@ -233,8 +242,8 @@ class RabbitMQConnector(object):
 
     def _on_bind(self, _method_frame):
         LOGGER.info("Starting to consume on queue %s", self._amqp_cfg.qu_config())
-        self._channel.basic_consume(queue=self._amqp_cfg.qu_config(),
-                                    on_message_callback=self._on_configuration_callback)
+        self._consumer_tag = self._channel.basic_consume(queue=self._amqp_cfg.qu_config(),
+                                                         on_message_callback=self._on_configuration_callback)
 
     def _on_configuration_callback(self, channel, method, _properties, body):
         if self._configuration_callback:
