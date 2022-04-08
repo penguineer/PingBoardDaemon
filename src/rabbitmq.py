@@ -190,7 +190,7 @@ class RabbitMQConnector(object):
 
     def _on_channel_open(self, channel):
         self._channel = channel
-        channel.add_on_close_callback(self._on_connection_closed)
+        channel.add_on_close_callback(self._on_channel_closed)
         channel.basic_qos(prefetch_count=1)
 
         LOGGER.info("Channel established")
