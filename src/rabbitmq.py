@@ -193,7 +193,7 @@ class RabbitMQConnector(object):
         channel.add_on_close_callback(self._on_connection_closed)
         channel.basic_qos(prefetch_count=1)
 
-        LOGGER.info("Configuration channel open")
+        LOGGER.info("Channel established")
 
         # Verify that the exchange exists
         self._channel.exchange_declare(exchange=self._amqp_cfg.exchange(),
