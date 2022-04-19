@@ -45,6 +45,7 @@ def main():
     # Pingboard Configuration
     pb_serial = pingboard.PingboardSerial()
     pb_cfg = pingboard.PingboardConfiguration(pb_serial)
+    service.HealthHandler.add_health_provider('serial', pb_serial.get_health)
 
     # RabbitMQ
     amqp = rabbitmq.RabbitMQConnector(amqp_cfg, ioloop)

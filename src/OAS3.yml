@@ -103,6 +103,18 @@ components:
             healthy:
               type: boolean
               description: true when evdev status is considered healthy
+        serial:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Name of the PingBoard serial device
+            path:
+              type: string
+              description: Serial device path
+            healthy:
+              type: boolean
+              description: true when serial status is considered healthy
   responses:
     AuthenticationRequired:
       description: Authentication is required (401)

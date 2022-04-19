@@ -186,6 +186,19 @@ class PingboardSerial:
         self._port = None
         self.scan_port()
 
+    def get_health(self) -> tuple[dict, bool]:
+        """Return the health status"""
+        healthy = self._port is not None
+        status = dict()
+
+        if self._port:
+            status["name"] = self._port.description
+            status["path"] = self._port.device
+
+        status["healthy"] = healthy
+
+        return status, healthy
+
     def scan_port(self):
         self._port = PingboardSerial.find_arduino_port()
 
