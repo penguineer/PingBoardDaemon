@@ -1,6 +1,7 @@
 """RabbitMQ management classes"""
 import base64
 import binascii
+import distutils.util
 import os
 import json
 import weakref
@@ -25,7 +26,7 @@ class AmqpConfiguration(object):
     DEFAULT_RK_KEY = ['1.key', '2.key', '3.key', '4.key']
     DEFAULT_RK_CONFIGURATION = "pingboard-configuration"
     DEFAULT_QU_CONFIGURATION = "pingboard-configuration"
-    DEFAULT_DECLARE = False
+    DEFAULT_DECLARE = "false"
 
     @staticmethod
     def from_environment():
@@ -45,7 +46,8 @@ class AmqpConfiguration(object):
             rk_key[i] = os.getenv('AMQP_RK_KEY_{}'.format(i+1), AmqpConfiguration.DEFAULT_RK_KEY[i])
         rk_config = os.getenv('AMQP_RK_CONFIG', AmqpConfiguration.DEFAULT_RK_CONFIGURATION)
         qu_config = os.getenv('AMQP_QU_CONFIG', AmqpConfiguration.DEFAULT_QU_CONFIGURATION)
-        declare = bool(os.getenv('AMQP_DECLARE', AmqpConfiguration.DEFAULT_DECLARE))
+        declare_env = os.getenv('AMQP_DECLARE', AmqpConfiguration.DEFAULT_DECLARE)
+        declare = bool(distutils.util.strtobool(declare_env))
 
         return AmqpConfiguration(host, user, passwd,
                                  exchange, rk_status, rk_key,
