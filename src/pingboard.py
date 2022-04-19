@@ -70,6 +70,20 @@ class PingboardEvDev(object):
     def stop(self):
         pass
 
+    def get_health(self) -> tuple[dict, bool]:
+        """Return the health status"""
+        healthy = self._dev is not None
+        status = dict()
+
+        if self._dev:
+            status["name"] = self._dev.name
+            status["path"] = self._dev.path
+            status["phys"] = self._dev.phys
+
+        status["healthy"] = healthy
+
+        return status, healthy
+
     def add_on_acquire_callback(self, callback):
         _cb = weakref.WeakMethod(callback)
         self._acquire_callbacks.append(_cb)

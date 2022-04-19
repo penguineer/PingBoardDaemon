@@ -88,6 +88,21 @@ components:
             healthy:
               type: boolean
               description: true when AMQP status is considered healthy
+        evdev:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Name of the PingBoard evdev device
+            path:
+              type: string
+              description: EvDev device path
+            phys:
+              type: string
+              description: USB device path
+            healthy:
+              type: boolean
+              description: true when evdev status is considered healthy
   responses:
     AuthenticationRequired:
       description: Authentication is required (401)

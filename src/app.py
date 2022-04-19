@@ -61,6 +61,7 @@ def main():
     pb_input.add_on_acquire_callback(pb_cfg.push_config)
     pb_input.setup()
     guard.add_termination_handler(pb_input.stop)
+    service.HealthHandler.add_health_provider('evdev', pb_input.get_health)
 
     # Run
     LOGGER.info("Starting ioloop")
