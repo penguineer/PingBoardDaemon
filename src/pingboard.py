@@ -83,10 +83,15 @@ class PingboardEvDev(object):
         self._dev = PingboardEvDev.find_pingboard_evdev()
         if self._dev:
             LOGGER.info("Found Pingboard event device %s", self._dev)
-            self._dev.grab()
-            self._ioloop.add_callback(self._listen)
-            self._on_acquire()
-        else:
+            try:
+                self._dev.grab()
+                self._ioloop.add_callback(self._listen)
+                self._on_acquire()
+            except OSError as e:
+                LOGGER.error("Error when grabbing the device: %s", str(e))
+                self._dev = None
+
+        if self._dev is None:
             LOGGER.error("Could not acquire the event device, will try again in 5 seconds")
             self._ioloop.call_later(5, self._acquire_evdev)
 
