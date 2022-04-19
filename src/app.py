@@ -20,7 +20,12 @@ def main():
 
     # Service Configuration
     management_port = os.getenv('MGMT_PORT', 8080)
-    amqp_cfg = rabbitmq.AmqpConfiguration.from_environment()
+    try:
+        amqp_cfg = rabbitmq.AmqpConfiguration.from_environment()
+    except ValueError as e:
+        LOGGER.critical("Critical error reading AMQP config: %s", e)
+        # It is still safe to just return here
+        return
 
     # Setup ioloop
     service.platform_setup()

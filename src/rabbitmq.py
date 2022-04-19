@@ -1,5 +1,6 @@
 """RabbitMQ management classes"""
-
+import base64
+import binascii
 import os
 import json
 import weakref
@@ -30,7 +31,12 @@ class AmqpConfiguration(object):
     def from_environment():
         host = os.getenv('AMQP_HOST', None)
         user = os.getenv('AMQP_USER', None)
-        passwd = os.getenv('AMQP_PASS', None)
+        passwd_b64 = os.getenv('AMQP_PASS', None)
+
+        try:
+            passwd = base64.b64decode(passwd_b64) if passwd_b64 else None
+        except binascii.Error as e:
+            raise ValueError("Error on base64-decoding", e)
 
         exchange = os.getenv('AMQP_EXCHANGE', AmqpConfiguration.DEFAULT_EXCHANGE)
         rk_status = os.getenv('AMQP_RK_STATUS', AmqpConfiguration.DEFAULT_RK_STATUS)
