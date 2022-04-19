@@ -154,6 +154,31 @@ class RabbitMQConnector(object):
             # Queue this in the ioloop to make sure that the configuration gets sent first!
             self._ioloop.add_callback(self._channel.basic_cancel, self._consumer_tag, self._on_cancel)
 
+    def get_health(self) -> tuple[dict, bool]:
+        """Return the health status"""
+        healthy = True
+        status = dict({
+            "host": self._amqp_cfg.host(),
+            "connection": "established",
+            "channel": "established",
+            "terminating": self._terminating
+        })
+
+        if self._connection is None or self._connection.is_closed:
+            status["connection"] = "not established"
+            healthy = self._terminating  # Healthy if terminating
+
+        if self._channel is None:
+            status["channel"] = "not established"
+            healthy = self._terminating  # Healthy if terminating
+
+        if self._consumer_tag is not None:
+            status["consumer tag"] = self._consumer_tag
+
+        status["healthy"] = healthy
+
+        return status, healthy
+
     def _on_cancel(self, _method_frame):
         if self._channel:
             self._channel.close()

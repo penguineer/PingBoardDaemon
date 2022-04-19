@@ -70,6 +70,20 @@ class PingboardEvDev(object):
     def stop(self):
         pass
 
+    def get_health(self) -> tuple[dict, bool]:
+        """Return the health status"""
+        healthy = self._dev is not None
+        status = dict()
+
+        if self._dev:
+            status["name"] = self._dev.name
+            status["path"] = self._dev.path
+            status["phys"] = self._dev.phys
+
+        status["healthy"] = healthy
+
+        return status, healthy
+
     def add_on_acquire_callback(self, callback):
         _cb = weakref.WeakMethod(callback)
         self._acquire_callbacks.append(_cb)
@@ -171,6 +185,19 @@ class PingboardSerial:
     def __init__(self):
         self._port = None
         self.scan_port()
+
+    def get_health(self) -> tuple[dict, bool]:
+        """Return the health status"""
+        healthy = self._port is not None
+        status = dict()
+
+        if self._port:
+            status["name"] = self._port.description
+            status["path"] = self._port.device
+
+        status["healthy"] = healthy
+
+        return status, healthy
 
     def scan_port(self):
         self._port = PingboardSerial.find_arduino_port()

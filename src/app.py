@@ -2,6 +2,7 @@
 
 """Main application"""
 import os
+
 import tornado.ioloop
 
 import service
@@ -39,11 +40,12 @@ def main():
 
     # Health Provider map uses weak references, so make sure to store this instance in a variable
     git_health_provider = service.GitHealthProvider()
-    service.HealthHandler.add_health_provider('git-version', git_health_provider)
+    service.HealthHandler.add_health_provider('git-version', git_health_provider.get_health)
 
     # Pingboard Configuration
     pb_serial = pingboard.PingboardSerial()
     pb_cfg = pingboard.PingboardConfiguration(pb_serial)
+    service.HealthHandler.add_health_provider('serial', pb_serial.get_health)
 
     # RabbitMQ
     amqp = rabbitmq.RabbitMQConnector(amqp_cfg, ioloop)
@@ -51,6 +53,7 @@ def main():
     amqp.set_configuration_callback(pb_cfg.on_configuration)
     amqp.set_configuration_provider(pb_cfg.get_configuration)
     amqp.setup()
+    service.HealthHandler.add_health_provider('amqp', amqp.get_health)
 
     # Pingboard Input
     key_parser = pingboard.PingboardKeyParser(amqp.publish_keypress)
@@ -59,6 +62,7 @@ def main():
     pb_input.add_on_acquire_callback(pb_cfg.push_config)
     pb_input.setup()
     guard.add_termination_handler(pb_input.stop)
+    service.HealthHandler.add_health_provider('evdev', pb_input.get_health)
 
     # Run
     LOGGER.info("Starting ioloop")

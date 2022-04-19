@@ -3,6 +3,7 @@
 import signal
 import platform
 import asyncio
+from functools import partial
 
 import tornado.ioloop
 import tornado.netutil
@@ -19,7 +20,7 @@ import weakref
 
 import json
 
-from typing import Callable, Union, Optional, Any
+from typing import Callable, Optional, Any, Union
 
 import logging
 LOGGER = logging.getLogger(__name__)
@@ -71,15 +72,7 @@ class TerminationGuard(object):
             LOGGER.info("IOLoop stopped")
 
 
-class HealthProvider(object):
-    """Interface class for health information providers"""
-    def get_health(self) -> tuple[Union[None, str, dict], bool]:
-        """Get additional health information and the provider's health status"""
-
-        pass
-
-
-class GitHealthProvider(HealthProvider):
+class GitHealthProvider(object):
     """Provide information about the git reference for the health endpoint"""
 
     # noinspection PyAttributeOutsideInit
@@ -122,15 +115,24 @@ class HealthHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
     startup_timestamp = datetime.now()
     """Store the timestamp of service start"""
 
-    health_providers = weakref.WeakValueDictionary()
+    health_providers = dict()
     """Weak references to the health information providers"""
 
     RESERVED_KEYS = ('api-version', 'timestamp', 'uptime')
     """Do not use these keys for additional health providers!"""
 
     @classmethod
-    def add_health_provider(cls, key: str, provider: HealthProvider) -> None:
-        """Add a health provider"""
+    def add_health_provider(cls, key: str, provider: Callable[[None], tuple[Union[None, str, dict], bool]]) -> None:
+        """Add a health provider
+
+        :param str key: The key used in the health return dictionary; must be unique and not in the RESERVED_KEYS.
+        :param Callable[[None], tuple[Union[None, str, dict], bool]] provider: the health provider callback.
+
+        The health provider callback must return a valid JSON as string
+        and a boolean indicating if a healthy state is given.
+
+        The health provider callback is stored as a weak reference.
+        """
 
         if key in cls.RESERVED_KEYS:
             raise ValueError("Key must not be in RESERVED_KEYS!")
@@ -141,7 +143,8 @@ class HealthHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         if provider is None:
             del cls.health_providers[key]
         else:
-            cls.health_providers[key] = provider
+            cls.health_providers[key] = weakref.WeakMethod(provider,
+                                                           partial(HealthHandler.health_providers.pop, key))
 
     # noinspection PyAttributeOutsideInit
     def initialize(self):
@@ -157,12 +160,8 @@ class HealthHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
         healthy = True
 
         # Call the health handlers
-        for key in HealthHandler.health_providers:
-            provider = HealthHandler.health_providers[key]
-            if provider is None:
-                del HealthHandler.health_providers[key]
-
-            info, status = provider.get_health()
+        for key, provider in HealthHandler.health_providers.items():
+            info, status = provider()()
             if info is not None:
                 health[key] = info
             healthy = healthy and status
