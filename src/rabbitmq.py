@@ -42,7 +42,7 @@ class AmqpConfiguration(object):
         rk_status = os.getenv('AMQP_RK_STATUS', AmqpConfiguration.DEFAULT_RK_STATUS)
         rk_key = [""] * 4
         for i in range(0, 4):
-            rk_key[i] = os.getenv('AMQP_RK_KEY_{}'.format(1), AmqpConfiguration.DEFAULT_RK_KEY[i])
+            rk_key[i] = os.getenv('AMQP_RK_KEY_{}'.format(i+1), AmqpConfiguration.DEFAULT_RK_KEY[i])
         rk_config = os.getenv('AMQP_RK_CONFIG', AmqpConfiguration.DEFAULT_RK_CONFIGURATION)
         qu_config = os.getenv('AMQP_QU_CONFIG', AmqpConfiguration.DEFAULT_QU_CONFIGURATION)
         declare = bool(os.getenv('AMQP_DECLARE', AmqpConfiguration.DEFAULT_DECLARE))
