@@ -2,6 +2,7 @@
 
 """Main application"""
 import os
+
 import tornado.ioloop
 
 import service
@@ -39,7 +40,7 @@ def main():
 
     # Health Provider map uses weak references, so make sure to store this instance in a variable
     git_health_provider = service.GitHealthProvider()
-    service.HealthHandler.add_health_provider('git-version', git_health_provider)
+    service.HealthHandler.add_health_provider('git-version', git_health_provider.get_health)
 
     # Pingboard Configuration
     pb_serial = pingboard.PingboardSerial()
