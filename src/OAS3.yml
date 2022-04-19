@@ -65,6 +65,29 @@ components:
         uptime:
           type: string
           example: ISO8601 conforming timespan
+        amqp:
+          type: object
+          properties:
+            host:
+              type: string
+              description: Configured AMQP host
+            connection:
+              type: string
+              enum:  [established, not established]
+              description: Connection state
+            channel:
+              type: string
+              enum:  [established, not established]
+              description: Channel state
+            terminating:
+              type: boolean
+              description: True if terminating, in this case the object is healthy without connection or channel
+            consumer tag:
+              type: string
+              description: The AMQP consumer tag that was chosen for this channel (optional)
+            healthy:
+              type: boolean
+              description: true when AMQP status is considered healthy
   responses:
     AuthenticationRequired:
       description: Authentication is required (401)
@@ -84,4 +107,3 @@ components:
           schema:
             type: string
             example: error message
-

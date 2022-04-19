@@ -52,6 +52,7 @@ def main():
     amqp.set_configuration_callback(pb_cfg.on_configuration)
     amqp.set_configuration_provider(pb_cfg.get_configuration)
     amqp.setup()
+    service.HealthHandler.add_health_provider('amqp', amqp.get_health)
 
     # Pingboard Input
     key_parser = pingboard.PingboardKeyParser(amqp.publish_keypress)
