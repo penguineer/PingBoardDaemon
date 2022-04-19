@@ -15,7 +15,7 @@ jobs:
         with:
           # GitHub event payload
           # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#release
-          status: |-
+          tweet-message: |-
             I have released ${{ github.event.release.tag_name }} of my project ${{ github.event.repository.name }}.
 
             Check it out at ${{ github.event.release.html_url }} !
