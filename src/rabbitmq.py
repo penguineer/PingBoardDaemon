@@ -187,7 +187,7 @@ class RabbitMQConnector(object):
         self._configuration_callback = callback
 
     def set_configuration_provider(self, provider):
-        self._configuration_provider = weakref.WeakMethod(provider)
+        self._configuration_provider = weakref.WeakMethod(provider) if provider else None
 
     def publish_status(self, status: json):
         self._publish(self._amqp_cfg.rk_status(), status)
