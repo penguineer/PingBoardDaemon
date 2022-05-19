@@ -206,6 +206,15 @@ class RabbitMQConnector(object):
                                              on_open_callback=self._on_connection_open,
                                              on_open_error_callback=self._on_connection_error,
                                              on_close_callback=None)
+        # if ioloop is missing take it from the connection
+        if self._ioloop is None:
+            self._ioloop = self._connection.ioloop
+
+    def _schedule_reconnect(self):
+        if self._ioloop:
+            self._ioloop.call_later(5, self._reconnect)
+        else:
+            LOGGER.fatal("IOLoop is not configured, will not retry!")
 
     def _reconnect(self):
         if not self._terminating:
@@ -213,11 +222,11 @@ class RabbitMQConnector(object):
                 self._connect()
             except Exception as e:
                 LOGGER.error("Error when connecting to RabbitMQ (will try again in 5 seconds: %s", str(e))
-                self._ioloop.call_later(5, self._reconnect)
+                self._schedule_reconnect()
 
     def _on_connection_error(self, _connection, e):
         LOGGER.error("Connection error (trying again in 5 seconds): %s", str(e))
-        self._ioloop.call_later(5, self._reconnect)
+        self._schedule_reconnect()
 
     def _on_connection_open(self, _connection):
         LOGGER.info("Connection to %s opened", self._amqp_cfg.host())
@@ -229,7 +238,7 @@ class RabbitMQConnector(object):
         if not self._terminating:
             LOGGER.warning("Connection closed unexpectedly, reopening in 5 seconds: %s", reason)
             self._channel = None
-            self._connection.ioloop.call_later(5, self._reconnect)
+            self._schedule_reconnect()
 
     def _on_channel_open(self, channel):
         self._channel = channel
