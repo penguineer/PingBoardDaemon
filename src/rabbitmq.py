@@ -142,6 +142,9 @@ class RabbitMQConnector(object):
         LOGGER.info("Terminating RabbitMQ consumer")
         self._terminating = True
 
+        if self._connection is None:
+            return
+
         if self._amqp_cfg.rk_config() != "" and\
                 self._configuration_provider and \
                 self._configuration_provider() is not None:
@@ -211,7 +214,7 @@ class RabbitMQConnector(object):
             self._ioloop = self._connection.ioloop
 
     def _schedule_reconnect(self):
-        if self._ioloop:
+        if self._ioloop and not self._terminating:
             self._ioloop.call_later(5, self._reconnect)
         else:
             LOGGER.fatal("IOLoop is not configured, will not retry!")
@@ -238,6 +241,7 @@ class RabbitMQConnector(object):
         if not self._terminating:
             LOGGER.warning("Connection closed unexpectedly, reopening in 5 seconds: %s", reason)
             self._channel = None
+            self._connection = None
             self._schedule_reconnect()
 
     def _on_channel_open(self, channel):
