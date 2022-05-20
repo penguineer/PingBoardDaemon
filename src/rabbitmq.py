@@ -142,6 +142,13 @@ class RabbitMQConnector(object):
         LOGGER.info("Terminating RabbitMQ consumer")
         self._terminating = True
 
+        if self._connection is None:
+            return
+
+        if self._ioloop is None:
+            LOGGER.warning("We do not have an ioloop, so further actions are not possible!")
+            return
+
         if self._amqp_cfg.rk_config() != "" and\
                 self._configuration_provider and \
                 self._configuration_provider() is not None:
@@ -187,7 +194,7 @@ class RabbitMQConnector(object):
         self._configuration_callback = callback
 
     def set_configuration_provider(self, provider):
-        self._configuration_provider = weakref.WeakMethod(provider)
+        self._configuration_provider = weakref.WeakMethod(provider) if provider else None
 
     def publish_status(self, status: json):
         self._publish(self._amqp_cfg.rk_status(), status)
@@ -206,6 +213,15 @@ class RabbitMQConnector(object):
                                              on_open_callback=self._on_connection_open,
                                              on_open_error_callback=self._on_connection_error,
                                              on_close_callback=None)
+        # if ioloop is missing take it from the connection
+        if self._ioloop is None:
+            self._ioloop = self._connection.ioloop
+
+    def _schedule_reconnect(self):
+        if self._ioloop and not self._terminating:
+            self._ioloop.call_later(5, self._reconnect)
+        else:
+            LOGGER.fatal("IOLoop is not configured, will not retry!")
 
     def _reconnect(self):
         if not self._terminating:
@@ -213,11 +229,11 @@ class RabbitMQConnector(object):
                 self._connect()
             except Exception as e:
                 LOGGER.error("Error when connecting to RabbitMQ (will try again in 5 seconds: %s", str(e))
-                self._ioloop.call_later(5, self._reconnect)
+                self._schedule_reconnect()
 
     def _on_connection_error(self, _connection, e):
         LOGGER.error("Connection error (trying again in 5 seconds): %s", str(e))
-        self._ioloop.call_later(5, self._reconnect)
+        self._schedule_reconnect()
 
     def _on_connection_open(self, _connection):
         LOGGER.info("Connection to %s opened", self._amqp_cfg.host())
@@ -229,7 +245,8 @@ class RabbitMQConnector(object):
         if not self._terminating:
             LOGGER.warning("Connection closed unexpectedly, reopening in 5 seconds: %s", reason)
             self._channel = None
-            self._connection.ioloop.call_later(5, self._reconnect)
+            self._connection = None
+            self._schedule_reconnect()
 
     def _on_channel_open(self, channel):
         self._channel = channel
