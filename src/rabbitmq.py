@@ -145,6 +145,10 @@ class RabbitMQConnector(object):
         if self._connection is None:
             return
 
+        if self._ioloop is None:
+            LOGGER.warning("We do not have an ioloop, so further actions are not possible!")
+            return
+
         if self._amqp_cfg.rk_config() != "" and\
                 self._configuration_provider and \
                 self._configuration_provider() is not None:
