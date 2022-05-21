@@ -11,8 +11,6 @@ import weakref
 
 from pika.adapters.tornado_connection import TornadoConnection
 
-# noinspection PyUnresolvedReferences
-# noinspection PyPackageRequirements
 from rabbitmq import AmqpConfiguration, RabbitMQConnector
 
 
@@ -160,7 +158,7 @@ class TestRabbitMQConnector:
 
     def test_no_config(self):
         with pytest.raises(ValueError) as e:
-            RabbitMQConnector(None)
+            RabbitMQConnector(None)  # type: ignore
 
         assert "AMQP configuration must be provided!" in str(e.value)
 
@@ -181,7 +179,7 @@ class TestRabbitMQConnector:
     def test_set_configuration_callback(self):
         con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
 
-        con.set_configuration_callback(None)
+        con.set_configuration_callback(None)  # type: ignore
         assert con._configuration_callback is None
 
         cb = SpyConfigurationCallback(False)
@@ -243,7 +241,7 @@ class TestRabbitMQConnector:
     def test_failed_connect_with_ioloop(self, caplog):
         cfg = TestRabbitMQConnector._create_default_config()
         ioloop = SpyTornadoIOLoopMock()
-        con = RabbitMQConnector(cfg, ioloop=ioloop)
+        con = RabbitMQConnector(cfg, ioloop=ioloop)  # type: ignore
 
         with caplog.at_level(logging.INFO):
             with mock.patch.object(TornadoConnection, '__init__') as tornado_mock:
