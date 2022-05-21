@@ -22,6 +22,9 @@ class PingboardKeyParser(object):
     def __init__(self,
                  callback):
         self._modifier = False
+
+        if callback is None:
+            raise ValueError("Callback must be provided!")
         self._callback = weakref.WeakMethod(callback)
 
     def process(self, code: int, enabled: bool):
@@ -31,12 +34,12 @@ class PingboardKeyParser(object):
 
         if code not in PingboardKeyParser.KEYS:
             LOGGER.warning("Unknown Pingboard key code: %s", code)
+            return
 
         key = PingboardKeyParser.KEYS.index(code) + 1
 
         if self._modifier and enabled:
-            if self._callback is not None:
-                self._callback()(key)
+            self._callback()(key)
 
 
 class PingboardEvDev(object):
