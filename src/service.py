@@ -175,14 +175,18 @@ class Oas3Handler(tornado.web.RequestHandler, metaclass=ABCMeta):
     """Return the OAS3 spec for the service endpoint"""
 
     def get(self):
-        self.set_header("Content-Type", "text/plain")
-        # The following is the proposed content type,
-        # but browsers like Firefox try to download instead of displaying the content
-        # self.set_header("Content-Type", "text/vnd.yml")
-        with open('OAS3.yml', 'r') as f:
-            oas3 = f.read()
-            self.write(oas3)
-        self.finish()
+        try:
+            self.set_header("Content-Type", "text/plain")
+            # The following is the proposed content type,
+            # but browsers like Firefox try to download instead of displaying the content
+            # self.set_header("Content-Type", "text/vnd.yml")
+            with open('OAS3.yml', 'r') as f:
+                oas3 = f.read()
+                self.write(oas3)
+            self.finish()
+        except FileNotFoundError:
+            self.set_status(404)
+            self.finish("OAS3 specification could not be found!")
 
 
 class ServiceMgmtEndpoint(object):
