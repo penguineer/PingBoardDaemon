@@ -4,8 +4,6 @@ import tornado.testing
 
 import json
 
-# noinspection PyUnresolvedReferences
-# noinspection PyPackageRequirements
 from service import ServiceMgmtEndpoint, GitHealthProvider, HealthHandler
 
 
