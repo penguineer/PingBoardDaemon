@@ -11,8 +11,6 @@ import weakref
 
 from pika.adapters.tornado_connection import TornadoConnection
 
-# noinspection PyUnresolvedReferences
-# noinspection PyPackageRequirements
 from rabbitmq import AmqpConfiguration, RabbitMQConnector
 
 
