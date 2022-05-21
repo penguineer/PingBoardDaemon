@@ -63,6 +63,13 @@ Configuration is done using environment variables:
 * `AMQP_QU_CONFIG`: RabbitMQ queue for configuration updates (default: `pingboard-configuration`)
 * `AMQP_DECLARE`: Declare exchange and channel with bind for configuration (default: `false`) 
 
+### Developing with PyCharm
+
+When opening this project with [PyCharm](https://www.jetbrains.com/de-de/pycharm/), make sure to mark the source and 
+test source directories accordingly. Otherwise, PyCharm will not find the source modules in the tests.
+
+The `test_service.py` module also needs to be run from the project root (not the test root).
+
 ## API
 
 ### RabbitMQ routing
