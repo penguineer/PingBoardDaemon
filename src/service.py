@@ -174,31 +174,40 @@ class HealthHandler(tornado.web.RequestHandler, metaclass=ABCMeta):
 class Oas3Handler(tornado.web.RequestHandler, metaclass=ABCMeta):
     """Return the OAS3 spec for the service endpoint"""
 
+    # noinspection PyAttributeOutsideInit
+    def initialize(self, path="OAS3.yml"):
+        self._path = path
+
     def get(self):
-        self.set_header("Content-Type", "text/plain")
-        # The following is the proposed content type,
-        # but browsers like Firefox try to download instead of displaying the content
-        # self.set_header("Content-Type", "text/vnd.yml")
-        with open('OAS3.yml', 'r') as f:
-            oas3 = f.read()
-            self.write(oas3)
-        self.finish()
+        try:
+            self.set_header("Content-Type", "text/plain")
+            # The following is the proposed content type,
+            # but browsers like Firefox try to download instead of displaying the content
+            # self.set_header("Content-Type", "text/vnd.yml")
+            with open(self._path, 'r') as f:
+                oas3 = f.read()
+                self.write(oas3)
+            self.finish()
+        except FileNotFoundError:
+            self.set_status(404)
+            self.finish("OAS3 specification could not be found!")
 
 
 class ServiceMgmtEndpoint(object):
     """Open a Tornado HTTP server for the service management API"""
 
-    def __init__(self, listen_port: Optional[int] = 8080):
+    def __init__(self, listen_port: Optional[int] = 8080, oas3_path="OAS3.yml"):
         if not isinstance(listen_port, int):
             raise ValueError("Server port must be an integer value!")
 
         self._listen_port = listen_port
+        self._oas3_path = oas3_path
         self._server = None
 
     def setup(self) -> None:
         """Setup the server (does not start ioloop)"""
         sockets = tornado.netutil.bind_sockets(self._listen_port, '')
-        server = tornado.httpserver.HTTPServer(ServiceMgmtEndpoint._make_app())
+        server = tornado.httpserver.HTTPServer(ServiceMgmtEndpoint._make_app(self._oas3_path))
         server.add_sockets(sockets)
 
         port = None
@@ -214,9 +223,9 @@ class ServiceMgmtEndpoint(object):
             self._server.stop()
 
     @staticmethod
-    def _make_app() -> tornado.web.Application:
+    def _make_app(oas3_path) -> tornado.web.Application:
         version_path = r"/v[0-9]"
         return tornado.web.Application([
             (version_path + r"/health", HealthHandler),
-            (version_path + r"/oas3", Oas3Handler),
+            (version_path + r"/oas3", Oas3Handler, {"path": oas3_path}),
         ])
