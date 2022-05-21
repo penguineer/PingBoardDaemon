@@ -178,6 +178,14 @@ class PingboardState(object):
             },
         }
 
+    def __eq__(self, other):
+        if not isinstance(other, PingboardState):
+            return False
+
+        return \
+            self.keys == other.keys and \
+            self.brightness == other.brightness
+
 
 class PingboardSerial:
     """Write to the Pingboard via the serial console"""
