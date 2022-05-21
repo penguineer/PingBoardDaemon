@@ -47,6 +47,12 @@ paths:
             text/plain:
               schema:
                 type: string
+        '404':
+          description: If the service does not have an API spec
+          content:
+            text/plain:
+              schema:
+                type: string
         '500':
           $ref: '#/components/responses/InternalError'
 
