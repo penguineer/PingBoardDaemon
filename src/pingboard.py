@@ -149,6 +149,15 @@ class PingboardKeyState(object):
             "color": self.blink_color
         }
 
+    def __eq__(self, other):
+        if not isinstance(other, PingboardKeyState):
+            return False
+
+        return \
+            self.color == other.color and \
+            self.blink_mode == other.blink_mode and \
+            self.blink_color == other.blink_color
+
 
 class PingboardState(object):
     """Store the Pingboard configuration state"""
@@ -168,6 +177,14 @@ class PingboardState(object):
                 "blink": [key.as_blink_configuration(idx + 1) for idx, key in enumerate(self.keys)]
             },
         }
+
+    def __eq__(self, other):
+        if not isinstance(other, PingboardState):
+            return False
+
+        return \
+            self.keys == other.keys and \
+            self.brightness == other.brightness
 
 
 class PingboardSerial:
