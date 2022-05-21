@@ -280,6 +280,9 @@ class PingboardConfiguration(object):
             self._key_blink(idx, key.blink_mode, key.blink_color)
 
     def on_configuration(self, cfg: json):
+        if cfg is None:
+            raise ValueError("Configuration must be provided!")
+
         if self._state is None:
             self._state = PingboardState()
 
