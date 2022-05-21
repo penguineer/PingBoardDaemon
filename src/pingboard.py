@@ -34,6 +34,7 @@ class PingboardKeyParser(object):
 
         if code not in PingboardKeyParser.KEYS:
             LOGGER.warning("Unknown Pingboard key code: %s", code)
+            return
 
         key = PingboardKeyParser.KEYS.index(code) + 1
 
