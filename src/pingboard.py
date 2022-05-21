@@ -254,6 +254,9 @@ class PingboardSerial:
 class PingboardConfiguration(object):
     """Handle Pingboard configuration requests"""
     def __init__(self, pb_serial: PingboardSerial):
+        if pb_serial is None:
+            raise ValueError("Must provide a pingboard serial handler!")
+
         self._serial = pb_serial
 
         # State object will be created when the first configuration comes in.
@@ -276,9 +279,17 @@ class PingboardConfiguration(object):
             self._key_color(idx, key.color)
             self._key_blink(idx, key.blink_mode, key.blink_color)
 
-    def on_configuration(self, cfg: json):
+    def _ensure_state(self):
         if self._state is None:
             self._state = PingboardState()
+
+    def on_configuration(self, cfg: json):
+        if cfg is None:
+            raise ValueError("Configuration must be provided!")
+
+        if "configuration" not in cfg:
+            LOGGER.warning("Could not find configuration part in snippet!")
+            return
 
         configuration = cfg.get("configuration", dict())
         for key, value in configuration.items():
@@ -308,11 +319,15 @@ class PingboardConfiguration(object):
             self._key_blink(idx, mode, color)
 
     def _brightness(self, brightness: int) -> bool:
+        self._ensure_state()
+
         self._state.brightness = brightness
 
         return self._serial.brightness(brightness)
 
     def _key_color(self, idx: int, color: List[int]) -> bool:
+        self._ensure_state()
+
         self._state.keys[idx - 1].color = color
 
         return self._serial.key_color(idx, color)
@@ -322,6 +337,8 @@ class PingboardConfiguration(object):
             raise ValueError("Blink mode must be one of %s, was:", PingboardKeyState.BLINK_MODE, mode)
 
         ok = self._serial.key_blink(idx, mode, color)
+
+        self._ensure_state()
 
         # Store single blink as 'OFF' event, if written successfully, so that it is not repeated
         self._state.keys[idx - 1].blink_mode = 'OFF' if mode == 'SINGLE' and ok else mode
