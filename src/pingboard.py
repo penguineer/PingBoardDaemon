@@ -254,6 +254,9 @@ class PingboardSerial:
 class PingboardConfiguration(object):
     """Handle Pingboard configuration requests"""
     def __init__(self, pb_serial: PingboardSerial):
+        if pb_serial is None:
+            raise ValueError("Must provide a pingboard serial handler!")
+
         self._serial = pb_serial
 
         # State object will be created when the first configuration comes in.
