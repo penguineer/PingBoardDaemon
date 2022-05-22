@@ -171,20 +171,6 @@ Please note that the key index is one-based.
 On shutdown the daemon will push an the configuration to the queue to retain it during a downtime. 
 To avoid this behaviour set an empty routing key for the configuration.
 
-#### Error message
-
-An error is structured like this:
-
-```json
-{
-  "error": {
-    "message": "Short error message",
-    "details": "Detailed explanation of the error",
-    "original": "Original message that lead to the error, if applicable"
-  }
-}
-```
-
 ### Health endpoint
 
 The daemon features a health endpoint to check if all components are up and running.
