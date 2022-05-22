@@ -117,73 +117,41 @@ Pingboard configuration, i.e. brightness, key colors and blinking, can be set wi
     "keys": [
       {
         "idx": 1,
-        "color": [
-          255,
-          255,
-          255
-        ]
+        "color": [255, 255, 255]
       },
       {
         "idx": 2,
-        "color": [
-          0,
-          0,
-          0
-        ]
+        "color": [0, 0, 0]
       },
       {
         "idx": 3,
-        "color": [
-          0,
-          0,
-          0
-        ]
+        "color": [0, 0, 0]
       },
       {
         "idx": 4,
-        "color": [
-          0,
-          0,
-          0
-        ]
+        "color": [0, 0, 0]
       }
     ],
     "blink": [
       {
         "idx": 1,
         "mode": "OFF",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       },
       {
         "idx": 2,
         "mode": "SINGLE",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       },
       {
         "idx": 3,
         "mode": "SHORT",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       },
       {
         "idx": 4,
         "mode": "LONG",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       }
     ]
   }
