@@ -1,6 +1,8 @@
 # PingBoard Daemon
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+![PyTest](https://github.com/penguineer/PingBoardDaemon/actions/workflows/pytest.yml/badge.svg)
+![Docker Image](https://github.com/penguineer/PingBoardDaemon/actions/workflows/docker-image.yml/badge.svg)
 
 > Daemon connecting the [PingBoard](https://github.com/PingTechGmbH/PingBoard) to [RabbitMQ](https://www.rabbitmq.com/)
 
