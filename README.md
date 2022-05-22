@@ -1,6 +1,8 @@
 # PingBoard Daemon
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+![PyTest](https://github.com/penguineer/PingBoardDaemon/actions/workflows/pytest.yml/badge.svg)
+![Docker Image](https://github.com/penguineer/PingBoardDaemon/actions/workflows/docker-image.yml/badge.svg)
 
 > Daemon connecting the [PingBoard](https://github.com/PingTechGmbH/PingBoard) to [RabbitMQ](https://www.rabbitmq.com/)
 
@@ -117,73 +119,41 @@ Pingboard configuration, i.e. brightness, key colors and blinking, can be set wi
     "keys": [
       {
         "idx": 1,
-        "color": [
-          255,
-          255,
-          255
-        ]
+        "color": [255, 255, 255]
       },
       {
         "idx": 2,
-        "color": [
-          0,
-          0,
-          0
-        ]
+        "color": [0, 0, 0]
       },
       {
         "idx": 3,
-        "color": [
-          0,
-          0,
-          0
-        ]
+        "color": [0, 0, 0]
       },
       {
         "idx": 4,
-        "color": [
-          0,
-          0,
-          0
-        ]
+        "color": [0, 0, 0]
       }
     ],
     "blink": [
       {
         "idx": 1,
         "mode": "OFF",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       },
       {
         "idx": 2,
         "mode": "SINGLE",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       },
       {
         "idx": 3,
         "mode": "SHORT",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       },
       {
         "idx": 4,
         "mode": "LONG",
-        "color": [
-          255,
-          0,
-          0
-        ]
+        "color": [255, 0, 0]
       }
     ]
   }
@@ -203,20 +173,6 @@ Please note that the key index is one-based.
 On shutdown the daemon will push an the configuration to the queue to retain it during a downtime. 
 To avoid this behaviour set an empty routing key for the configuration.
 
-#### Error message
-
-An error is structured like this:
-
-```json
-{
-  "error": {
-    "message": "Short error message",
-    "details": "Detailed explanation of the error",
-    "original": "Original message that lead to the error, if applicable"
-  }
-}
-```
-
 ### Health endpoint
 
 The daemon features a health endpoint to check if all components are up and running.
@@ -233,7 +189,7 @@ To expose the health endpoint, route port 8080 to a port that is suitable for th
 
 ## Maintainers
 
-* [@penguineer](https://github.com/penguineer)
+* Stefan Haun ([@penguineer](https://github.com/penguineer))
 
 ## Contributing
 
