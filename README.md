@@ -187,7 +187,7 @@ To expose the health endpoint, route port 8080 to a port that is suitable for th
 
 ## Maintainers
 
-* [@penguineer](https://github.com/penguineer)
+* Stefan Haun ([@penguineer](https://github.com/penguineer))
 
 ## Contributing
 
