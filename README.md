@@ -206,4 +206,4 @@ the [standard-readme](https://github.com/RichardLitt/standard-readme) specificat
 
 ## License
 
-[MIT](LICENSE.txt) © 2022-2023 Stefan Haun and contributors
+[MIT](LICENSE.txt) © 2022 Stefan Haun and contributors
