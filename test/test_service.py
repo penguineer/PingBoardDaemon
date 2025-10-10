@@ -3,6 +3,7 @@
 import tornado.testing
 
 import json
+import os
 
 from service import ServiceMgmtEndpoint, GitHealthProvider, HealthHandler
 
@@ -10,7 +11,9 @@ from service import ServiceMgmtEndpoint, GitHealthProvider, HealthHandler
 class TestServiceApi(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return ServiceMgmtEndpoint._make_app("src/OAS3.yml")
+        oas3_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'OAS3.yml')
+        oas3_path = os.path.abspath(oas3_path)
+        return ServiceMgmtEndpoint._make_app(oas3_path)
 
     def test_health_endpoint_without(self):
         response = self.fetch('/v0/health',
