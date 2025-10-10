@@ -431,6 +431,7 @@ class TestPingboardConfiguration:
         serial_mock = MockPingboardSerial()
         cfg = PingboardConfiguration(serial_mock)
 
+        # Should ignore the "foo" key
         cfg.on_configuration({"configuration": {
             "brightness": 0,
             "foo": 1,
@@ -457,12 +458,13 @@ class TestPingboardConfiguration:
 
         assert len(caplog.records) == 1
         assert caplog.records[-1].message == \
-               "Invalid configuration snippet: 'foo'"
+               "Unknown configuration key: foo"
 
     def test_on_configuration_only_invalid(self, caplog):
         serial_mock = MockPingboardSerial()
         cfg = PingboardConfiguration(serial_mock)
 
+        # Should ignore the "foo" key
         cfg.on_configuration({"configuration": {
             "foo": 1,
         }})
@@ -472,7 +474,7 @@ class TestPingboardConfiguration:
 
         assert len(caplog.records) == 1
         assert caplog.records[-1].message == \
-               "Invalid configuration snippet: 'foo'"
+               "Unknown configuration key: foo"
 
     def test_on_configuration_generic(self):
         serial_mock = MockPingboardSerial()
