@@ -327,27 +327,56 @@ class PingboardConfiguration(object):
         configuration = cfg.get("configuration", dict())
         for key, value in configuration.items():
             # may throw a ValueError
-            self._cfg_handlers[key](value)
+            try:
+                self._cfg_handlers[key](value)
+            except KeyError:
+                LOGGER.warning("Unknown configuration key: %s", key)
 
     def get_configuration(self) -> dict:
         return (self._state or PingboardState()).as_configuration()
 
     def _cfg_brightness(self, brightness):
-        if brightness is not None:
-            self._brightness(brightness)
+        if brightness is None:
+            return
+
+        if not (0 <= brightness <= 255):
+            raise ValueError("Brightness must be in 0-255 range, got: {}".format(brightness))
+
+        self._brightness(brightness)
 
     def _cfg_keys(self, keys):
         for key in keys or dict():
             idx = key['idx']
+            self._validate_key_index(idx)
+
             color = key['color']
+            self._validate_color(color)
+
             self._key_color(idx, color)
 
     def _cfg_blink(self, blinks):
         for blink in blinks or dict():
             idx = blink['idx']
+            self._validate_key_index(idx)
+
             color = blink['color']
+            self._validate_color(color)
+
             mode = blink['mode']
+            if mode not in PingboardKeyState.BLINK_MODE:
+                raise ValueError("Blink mode must be one of %s, was: %s", PingboardKeyState.BLINK_MODE, mode)
+
             self._key_blink(idx, mode, color)
+
+    @staticmethod
+    def _validate_key_index(idx):
+        if not (1 <= idx <= 4):
+            raise ValueError("Key index must be in 1-4 range, got: {}".format(idx))
+
+    @staticmethod
+    def _validate_color(color):
+        if len(color) != 3 or not all(0 <= c <= 255 for c in color):
+            raise ValueError("Color must be a list of three integers in 0-255 range, got: {}".format(color))
 
     def _brightness(self, brightness: int) -> bool:
         self._ensure_state()
