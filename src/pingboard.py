@@ -223,11 +223,18 @@ class PingboardSerial:
         self._port = PingboardSerial.find_arduino_port()
 
     def brightness(self, brightness: int) -> bool:
+        if not (0 <= brightness <= 255):
+            raise ValueError("Brightness must be in 0-255 range, got: {}".format(brightness))
+
         command = "DIM {:03d}\n".format(brightness)
 
         return self._write(command)
 
     def key_color(self, idx: int, color: List[int]) -> bool:
+        self._assert_key_index(idx)
+        if len(color) != 3 or not all(0 <= c <= 255 for c in color):
+            raise ValueError("Color must be a list of three integers in 0-255 range, got: {}".format(color))
+
         command = "COL {0:1d} {1:03d} {2:03d} {3:03d}\n".format(idx,
                                                                 color[0],
                                                                 color[1],
@@ -236,12 +243,21 @@ class PingboardSerial:
         return self._write(command)
 
     def key_blink(self, idx: int, mode: str, color: List[int]) -> bool:
+        self._assert_key_index(idx)
+        if mode not in PingboardKeyState.BLINK_MODE:
+            raise ValueError("Blink mode must be one of %s, was: %s", PingboardKeyState.BLINK_MODE, mode)
+
         command = "BLNK {:1d} {} {:03d} {:03d} {:03d}\n".format(idx,
                                                                 mode,
                                                                 color[0],
                                                                 color[1],
                                                                 color[2])
         return self._write(command)
+
+    @staticmethod
+    def _assert_key_index(idx: int):
+        if not (1 <= idx <= 4):
+            raise ValueError("Key index must be in 1-4 range, got: {}".format(idx))
 
     def _write(self, command: str) -> bool:
         ok = False
@@ -310,30 +326,57 @@ class PingboardConfiguration(object):
 
         configuration = cfg.get("configuration", dict())
         for key, value in configuration.items():
+            # may throw a ValueError
             try:
                 self._cfg_handlers[key](value)
-            except Exception as e:
-                LOGGER.error("Invalid configuration snippet: %s", str(e))
+            except KeyError:
+                LOGGER.warning("Unknown configuration key: %s", key)
 
     def get_configuration(self) -> dict:
         return (self._state or PingboardState()).as_configuration()
 
     def _cfg_brightness(self, brightness):
-        if brightness is not None:
-            self._brightness(brightness)
+        if brightness is None:
+            return
+
+        if not (0 <= brightness <= 255):
+            raise ValueError("Brightness must be in 0-255 range, got: {}".format(brightness))
+
+        self._brightness(brightness)
 
     def _cfg_keys(self, keys):
         for key in keys or dict():
             idx = key['idx']
+            self._validate_key_index(idx)
+
             color = key['color']
+            self._validate_color(color)
+
             self._key_color(idx, color)
 
     def _cfg_blink(self, blinks):
         for blink in blinks or dict():
             idx = blink['idx']
+            self._validate_key_index(idx)
+
             color = blink['color']
+            self._validate_color(color)
+
             mode = blink['mode']
+            if mode not in PingboardKeyState.BLINK_MODE:
+                raise ValueError("Blink mode must be one of %s, was: %s", PingboardKeyState.BLINK_MODE, mode)
+
             self._key_blink(idx, mode, color)
+
+    @staticmethod
+    def _validate_key_index(idx):
+        if not (1 <= idx <= 4):
+            raise ValueError("Key index must be in 1-4 range, got: {}".format(idx))
+
+    @staticmethod
+    def _validate_color(color):
+        if len(color) != 3 or not all(0 <= c <= 255 for c in color):
+            raise ValueError("Color must be a list of three integers in 0-255 range, got: {}".format(color))
 
     def _brightness(self, brightness: int) -> bool:
         self._ensure_state()
