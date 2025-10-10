@@ -223,11 +223,18 @@ class PingboardSerial:
         self._port = PingboardSerial.find_arduino_port()
 
     def brightness(self, brightness: int) -> bool:
+        if not (0 <= brightness <= 255):
+            raise ValueError("Brightness must be in 0-255 range, got: {}".format(brightness))
+
         command = "DIM {:03d}\n".format(brightness)
 
         return self._write(command)
 
     def key_color(self, idx: int, color: List[int]) -> bool:
+        self._assert_key_index(idx)
+        if len(color) != 3 or not all(0 <= c <= 255 for c in color):
+            raise ValueError("Color must be a list of three integers in 0-255 range, got: {}".format(color))
+
         command = "COL {0:1d} {1:03d} {2:03d} {3:03d}\n".format(idx,
                                                                 color[0],
                                                                 color[1],
@@ -236,12 +243,21 @@ class PingboardSerial:
         return self._write(command)
 
     def key_blink(self, idx: int, mode: str, color: List[int]) -> bool:
+        self._assert_key_index(idx)
+        if mode not in PingboardKeyState.BLINK_MODE:
+            raise ValueError("Blink mode must be one of %s, was: %s", PingboardKeyState.BLINK_MODE, mode)
+
         command = "BLNK {:1d} {} {:03d} {:03d} {:03d}\n".format(idx,
                                                                 mode,
                                                                 color[0],
                                                                 color[1],
                                                                 color[2])
         return self._write(command)
+
+    @staticmethod
+    def _assert_key_index(idx: int):
+        if not (1 <= idx <= 4):
+            raise ValueError("Key index must be in 1-4 range, got: {}".format(idx))
 
     def _write(self, command: str) -> bool:
         ok = False
