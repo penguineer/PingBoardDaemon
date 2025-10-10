@@ -304,16 +304,22 @@ class RabbitMQConnector(object):
                     self._configuration_callback(cfg)
             except json.decoder.JSONDecodeError as e:
                 LOGGER.warning("Could not decode configuration snippet: %s", str(e))
-                self._publish(self._amqp_cfg.rk_status(),
-                              {"error": {
-                                  "message": "Invalid JSON received for configuration",
-                                  "details": str(e),
-                                  "original": body.decode('utf-8')
-                              }})
+                self._publish_error_status("Could not decode configuration snippet", e, body.decode('utf-8'))
+            except ValueError as e:
+                LOGGER.error("Invalid configuration snippet: %s", str(e))
+                self._publish_error_status("Invalid configuration snippet", e, body.decode('utf-8'))
 
         # Don't ack when terminating, as we cannot act on the configuration anymore
         if not self._terminating:
             channel.basic_ack(delivery_tag=method.delivery_tag)
+
+    def _publish_error_status(self, message, error, original):
+        self._publish(self._amqp_cfg.rk_status(),
+                      {"error": {
+                          "message": message,
+                          "details": str(error),
+                          "original": original
+                      }})
 
     def _publish(self, rk, body):
         # TODO enable correlation keys

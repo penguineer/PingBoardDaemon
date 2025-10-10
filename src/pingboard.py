@@ -326,10 +326,8 @@ class PingboardConfiguration(object):
 
         configuration = cfg.get("configuration", dict())
         for key, value in configuration.items():
-            try:
-                self._cfg_handlers[key](value)
-            except Exception as e:
-                LOGGER.error("Invalid configuration snippet: %s", str(e))
+            # may throw a ValueError
+            self._cfg_handlers[key](value)
 
     def get_configuration(self) -> dict:
         return (self._state or PingboardState()).as_configuration()
