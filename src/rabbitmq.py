@@ -1,7 +1,7 @@
 """RabbitMQ management classes"""
 import base64
 import binascii
-import distutils.util
+from util import strtobool
 import os
 import json
 import weakref
@@ -47,7 +47,7 @@ class AmqpConfiguration(object):
         rk_config = os.getenv('AMQP_RK_CONFIG', AmqpConfiguration.DEFAULT_RK_CONFIGURATION)
         qu_config = os.getenv('AMQP_QU_CONFIG', AmqpConfiguration.DEFAULT_QU_CONFIGURATION)
         declare_env = os.getenv('AMQP_DECLARE', AmqpConfiguration.DEFAULT_DECLARE)
-        declare = bool(distutils.util.strtobool(declare_env))
+        declare = bool(strtobool(declare_env))
 
         return AmqpConfiguration(host, user, passwd,
                                  exchange, rk_status, rk_key,
