@@ -93,16 +93,18 @@ class PingboardEvDev(object):
         self._acquire_callbacks.append(_cb)
 
     def _on_acquire(self):
-        for cb in self._acquire_callbacks:
-            if cb() is not None:
-                cb()()
+        self._fire_callbacks(self._acquire_callbacks)
 
     def add_on_disconnect_callback(self, callback):
         _cb = weakref.WeakMethod(callback)
         self._disconnect_callbacks.append(_cb)
 
     def _on_disconnect(self):
-        for cb in self._disconnect_callbacks:
+        self._fire_callbacks(self._disconnect_callbacks)
+
+    @staticmethod
+    def _fire_callbacks(callbacks):
+        for cb in callbacks:
             if cb() is not None:
                 cb()()
 
