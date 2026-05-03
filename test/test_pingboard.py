@@ -6,6 +6,7 @@ import pytest
 
 import weakref
 
+import serial
 import serial.tools.list_ports
 
 from pingboard import PingboardKeyParser, PingboardKeyState, PingboardState, PingboardSerial, PingboardConfiguration, \
@@ -343,7 +344,75 @@ class TestPingboardSerial:
             with pytest.raises(ValueError):
                 ser.key_blink(1, "ON", [128, 56])
 
-    # TODO test write with serial mock
+    def test_write_success(self):
+        ser = TestPingboardSerial.create_serial()
+
+        with mock.patch('serial.Serial') as serial_class_mock:
+            serial_instance = mock.MagicMock()
+            serial_class_mock.return_value = serial_instance
+            serial_instance.readline.return_value = b"OK\n"
+
+            result = ser._write("DIM 000\n")
+
+            assert result is True
+            serial_class_mock.assert_called_once_with("/dev/mock", 115200, timeout=1)
+            serial_instance.write.assert_called_once_with(b"DIM 000\n")
+            serial_instance.flush.assert_called_once()
+            serial_instance.close.assert_called_once()
+
+    def test_write_no_port(self, caplog):
+        ser = TestPingboardSerial.create_serial()
+        ser._port = None
+
+        with mock.patch('serial.Serial') as serial_class_mock:
+            result = ser._write("DIM 000\n")
+
+        assert result is False
+        serial_class_mock.assert_not_called()
+        assert any("Failure when writing to Pingboard" in r.message for r in caplog.records)
+
+    def test_write_bad_response(self, caplog):
+        ser = TestPingboardSerial.create_serial()
+
+        with mock.patch('serial.Serial') as serial_class_mock:
+            serial_instance = mock.MagicMock()
+            serial_class_mock.return_value = serial_instance
+            serial_instance.readline.return_value = b"FAIL\n"
+
+            result = ser._write("DIM 000\n")
+
+        assert result is False
+        assert serial_class_mock.call_count == 3
+        assert any("Failure when writing to Pingboard" in r.message for r in caplog.records)
+
+    def test_write_serial_exception(self, caplog):
+        ser = TestPingboardSerial.create_serial()
+
+        with mock.patch('serial.Serial') as serial_class_mock:
+            serial_class_mock.side_effect = serial.SerialException("Test error")
+
+            with mock.patch.object(PingboardSerial, 'scan_port') as scan_port_mock:
+                result = ser._write("DIM 000\n")
+
+        assert result is False
+        assert serial_class_mock.call_count == 3
+        assert scan_port_mock.call_count == 3
+        assert any("Serial exception while writing to Pingboard" in r.message for r in caplog.records)
+        assert any("Test error" in r.message for r in caplog.records)
+        assert any("Failure when writing to Pingboard" in r.message for r in caplog.records)
+
+    def test_write_success_after_retry(self):
+        ser = TestPingboardSerial.create_serial()
+
+        with mock.patch('serial.Serial') as serial_class_mock:
+            serial_instance = mock.MagicMock()
+            serial_class_mock.return_value = serial_instance
+            serial_instance.readline.side_effect = [b"FAIL\n", b"OK\n"]
+
+            result = ser._write("DIM 000\n")
+
+        assert result is True
+        assert serial_class_mock.call_count == 2
 
 
 class MockPingboardSerial(PingboardSerial):
