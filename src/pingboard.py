@@ -66,6 +66,7 @@ class PingboardEvDev(object):
         self._parser = parser
 
         self._acquire_callbacks = list()
+        self._disconnect_callbacks = list()
 
     def setup(self):
         self._acquire_evdev()
@@ -92,7 +93,18 @@ class PingboardEvDev(object):
         self._acquire_callbacks.append(_cb)
 
     def _on_acquire(self):
-        for cb in self._acquire_callbacks:
+        self._fire_callbacks(self._acquire_callbacks)
+
+    def add_on_disconnect_callback(self, callback):
+        _cb = weakref.WeakMethod(callback)
+        self._disconnect_callbacks.append(_cb)
+
+    def _on_disconnect(self):
+        self._fire_callbacks(self._disconnect_callbacks)
+
+    @staticmethod
+    def _fire_callbacks(callbacks):
+        for cb in callbacks:
             if cb() is not None:
                 cb()()
 
@@ -118,6 +130,10 @@ class PingboardEvDev(object):
                 self._process_event(ev)
         except OSError as e:
             LOGGER.warning("OSError in evdev loop: %s", str(e))
+
+        # Device is no longer available
+        self._dev = None
+        self._on_disconnect()
 
         # Got out of this loop somehow -> restart
         self._acquire_evdev()

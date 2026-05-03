@@ -161,6 +161,25 @@ class RabbitMQConnector(object):
             # Queue this in the ioloop to make sure that the configuration gets sent first!
             self._ioloop.add_callback(self._channel.basic_cancel, self._consumer_tag, self._on_cancel)
 
+    def pause_consuming(self):
+        """Pause consuming messages from the queue (e.g. when PingBoard is unavailable)."""
+        LOGGER.info("Pausing RabbitMQ consumer (PingBoard unavailable)")
+        if self._channel and self._consumer_tag:
+            self._ioloop.add_callback(self._channel.basic_cancel, self._consumer_tag, self._on_consumer_paused)
+
+    def _on_consumer_paused(self, _method_frame):
+        self._consumer_tag = None
+        LOGGER.info("RabbitMQ consumer paused")
+
+    def resume_consuming(self):
+        """Resume consuming messages from the queue (e.g. when PingBoard becomes available)."""
+        LOGGER.info("Resuming RabbitMQ consumer (PingBoard available)")
+        if self._channel and not self._consumer_tag and not self._terminating:
+            self._consumer_tag = self._channel.basic_consume(
+                queue=self._amqp_cfg.qu_config(),
+                on_message_callback=self._on_configuration_callback
+            )
+
     def get_health(self) -> tuple[dict, bool]:
         """Return the health status"""
         healthy = True
