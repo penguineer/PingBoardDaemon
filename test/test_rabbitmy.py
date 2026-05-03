@@ -291,3 +291,92 @@ class TestRabbitMQConnector:
         assert len(caplog.records) == 1
         assert caplog.records[-1].message == \
                "Terminating RabbitMQ consumer"
+
+    def test_pause_consuming_no_channel(self, caplog):
+        """pause_consuming does nothing when no channel is established."""
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
+
+        with caplog.at_level(logging.INFO):
+            con.pause_consuming()
+
+        # Should log the intent but not crash
+        assert any("Pausing" in r.message for r in caplog.records)
+        assert con._consumer_tag is None
+
+    def test_pause_consuming_with_channel_and_tag(self):
+        """pause_consuming cancels the consumer via the ioloop when channel+tag are set."""
+        ioloop_mock = mock.MagicMock()
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config(), ioloop=ioloop_mock)  # type: ignore
+
+        channel_mock = mock.MagicMock()
+        con._channel = channel_mock
+        con._consumer_tag = "test-tag"
+
+        con.pause_consuming()
+
+        ioloop_mock.add_callback.assert_called_once_with(
+            channel_mock.basic_cancel, "test-tag", con._on_consumer_paused
+        )
+
+    def test_on_consumer_paused_clears_tag(self, caplog):
+        """_on_consumer_paused clears the consumer tag and logs."""
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
+        con._consumer_tag = "test-tag"
+
+        with caplog.at_level(logging.INFO):
+            con._on_consumer_paused(None)
+
+        assert con._consumer_tag is None
+        assert any("paused" in r.message for r in caplog.records)
+
+    def test_resume_consuming_no_channel(self, caplog):
+        """resume_consuming does nothing when no channel is established."""
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
+
+        with caplog.at_level(logging.INFO):
+            con.resume_consuming()
+
+        assert any("Resuming" in r.message for r in caplog.records)
+        assert con._consumer_tag is None
+
+    def test_resume_consuming_already_consuming(self, caplog):
+        """resume_consuming does nothing when already consuming."""
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
+        con._channel = mock.MagicMock()
+        con._consumer_tag = "existing-tag"
+
+        with caplog.at_level(logging.INFO):
+            con.resume_consuming()
+
+        # basic_consume should NOT have been called again
+        con._channel.basic_consume.assert_not_called()
+        assert con._consumer_tag == "existing-tag"
+
+    def test_resume_consuming_when_terminating(self, caplog):
+        """resume_consuming does nothing when terminating."""
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
+        con._channel = mock.MagicMock()
+        con._consumer_tag = None
+        con._terminating = True
+
+        with caplog.at_level(logging.INFO):
+            con.resume_consuming()
+
+        con._channel.basic_consume.assert_not_called()
+
+    def test_resume_consuming_starts_consumer(self, caplog):
+        """resume_consuming starts consuming when channel is available and not yet consuming."""
+        con = RabbitMQConnector(TestRabbitMQConnector._create_default_config())
+        channel_mock = mock.MagicMock()
+        channel_mock.basic_consume.return_value = "new-tag"
+        con._channel = channel_mock
+        con._consumer_tag = None
+
+        with caplog.at_level(logging.INFO):
+            con.resume_consuming()
+
+        channel_mock.basic_consume.assert_called_once_with(
+            queue=con._amqp_cfg.qu_config(),
+            on_message_callback=con._on_configuration_callback
+        )
+        assert con._consumer_tag == "new-tag"

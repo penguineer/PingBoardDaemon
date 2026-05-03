@@ -8,7 +8,8 @@ import weakref
 
 import serial.tools.list_ports
 
-from pingboard import PingboardKeyParser, PingboardKeyState, PingboardState, PingboardSerial, PingboardConfiguration
+from pingboard import PingboardKeyParser, PingboardKeyState, PingboardState, PingboardSerial, PingboardConfiguration, \
+    PingboardEvDev
 
 
 class KeyCallback(object):
@@ -551,3 +552,70 @@ class TestPingboardConfiguration:
                                        {'color': [0, 0, 0], 'idx': 3},
                                        {'color': [0, 0, 0], 'idx': 4}]}
         }
+
+
+class SimpleCallback(object):
+    def __init__(self):
+        self.called = False
+
+    def callback(self):
+        self.called = True
+
+
+class TestPingboardEvDevDisconnect:
+    @staticmethod
+    def _make_ioloop_mock():
+        ioloop = mock.MagicMock()
+        return ioloop
+
+    @staticmethod
+    def _make_evdev(ioloop=None):
+        if ioloop is None:
+            ioloop = TestPingboardEvDevDisconnect._make_ioloop_mock()
+        key_cb = KeyCallback()
+        key_parser = PingboardKeyParser(key_cb.callback)
+        return PingboardEvDev(key_parser, ioloop)
+
+    def test_disconnect_callbacks_initially_empty(self):
+        ev = TestPingboardEvDevDisconnect._make_evdev()
+        assert ev._disconnect_callbacks == []
+
+    def test_add_on_disconnect_callback(self):
+        ev = TestPingboardEvDevDisconnect._make_evdev()
+        cb = SimpleCallback()
+        ev.add_on_disconnect_callback(cb.callback)
+        assert len(ev._disconnect_callbacks) == 1
+
+    def test_on_disconnect_calls_callback(self):
+        ev = TestPingboardEvDevDisconnect._make_evdev()
+        cb = SimpleCallback()
+        ev.add_on_disconnect_callback(cb.callback)
+
+        assert not cb.called
+        ev._on_disconnect()
+        assert cb.called
+
+    def test_on_disconnect_ignores_dead_references(self):
+        ev = TestPingboardEvDevDisconnect._make_evdev()
+        cb = SimpleCallback()
+        ev.add_on_disconnect_callback(cb.callback)
+
+        # Delete the original object so weak reference dies
+        del cb
+        import gc
+        gc.collect()
+
+        # Should not raise
+        ev._on_disconnect()
+
+    def test_on_disconnect_multiple_callbacks(self):
+        ev = TestPingboardEvDevDisconnect._make_evdev()
+        cb1 = SimpleCallback()
+        cb2 = SimpleCallback()
+        ev.add_on_disconnect_callback(cb1.callback)
+        ev.add_on_disconnect_callback(cb2.callback)
+
+        ev._on_disconnect()
+
+        assert cb1.called
+        assert cb2.called

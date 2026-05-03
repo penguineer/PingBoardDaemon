@@ -60,6 +60,8 @@ def main():
     pb_input = pingboard.PingboardEvDev(key_parser, ioloop)
     pb_input.add_on_acquire_callback(pb_serial.scan_port)
     pb_input.add_on_acquire_callback(pb_cfg.push_config)
+    pb_input.add_on_acquire_callback(amqp.resume_consuming)
+    pb_input.add_on_disconnect_callback(amqp.pause_consuming)
     pb_input.setup()
     guard.add_termination_handler(pb_input.stop)
     service.HealthHandler.add_health_provider('evdev', pb_input.get_health)
