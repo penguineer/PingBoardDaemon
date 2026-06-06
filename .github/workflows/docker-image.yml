@@ -15,6 +15,10 @@ env:
   IMAGE_NAME: mrtux/pingboard-daemon
   TARGET_PLATFORMS: linux/amd64,linux/arm64,linux/arm/v7
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   docker:
     runs-on: ubuntu-latest
