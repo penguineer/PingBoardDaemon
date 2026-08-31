@@ -4,7 +4,7 @@ pytest==9.1.1
 pytest-asyncio==1.4.0
 pika==1.4.4
 pika-stubs==0.1.3
-evdev==1.9.3
+evdev==2.0.0
 pyserial==3.5
 
 # Needed for pika lib, but no longer included by default since python:3.12
