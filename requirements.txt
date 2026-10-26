@@ -8,4 +8,4 @@ evdev==2.0.0
 pyserial==3.5
 
 # Needed for pika lib, but no longer included by default since python:3.12
-setuptools==84.0.0
+setuptools==84.2.1
