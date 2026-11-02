@@ -1,6 +1,6 @@
 tornado==6.6
 isodate==0.7.2
-pytest==9.1.1
+pytest==9.2.0
 pytest-asyncio==1.4.1
 pika==1.4.4
 pika-stubs==0.1.3
